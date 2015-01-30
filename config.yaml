@@ -13,14 +13,15 @@ collections:
 
         wb_handler_class: !!python/name:timetravel.mementohandler.MementoHandler
 
-        fallback: live
+        #fallback: live
 
     live:
         index_paths: $liveweb
         cookie_scope: root
 
 
-#redirect_to_exact: false
+redirect_to_exact: false
+
 framed_replay: true
 
 enable_http_proxy: true

@@ -22,21 +22,7 @@ def datetime_to_secs(dt):
 
 
 #=============================================================================
-class MemValue(object):
-    """ Simple wrapper to hold timestamp,
-    epoch seconds, and memento url
-    """
-    def __init__(self, ts, sec, url):
-        self.ts = ts
-        self.sec = sec
-        self.url = url
-
-    def use_ts_url(self):
-        """ clears secs to invalidate,
-        returns sec, url
-        """
-        self.sec = None
-        return self.ts, self.url
+MemValue = namedtuple('MemValue', 'ts, sec, url')
 
 
 #=============================================================================
@@ -48,7 +34,6 @@ class MementoApi(object):
 
     def timegate_query(self, timestamp, url):
         full = self.api_endpoint + timestamp + '/' + url
-        #print('LOADING: ' + full)
         try:
             r = self.session.get(full)
             result = r.json()
@@ -106,42 +91,59 @@ class MementoClosestQuery(object):
         mementos = self.api_loader.timegate_query(timestamp, self.url)
 
         self.m_closest = self._get_mem_info(mementos, 'closest')
-        self.m_next = self._get_mem_info(mementos, 'next')
-        self.m_prev = self._get_mem_info(mementos, 'prev')
+        self.m_next = self._get_mem_info(mementos, 'next', 'last', self.m_closest.ts)
+        self.m_prev = self._get_mem_info(mementos, 'prev', 'first', self.m_closest.ts)
 
-    def _get_mem_info(self, mementos, name):
+    def _get_mem_info(self, mementos, name, alt_name=None, closest_ts=None):
         m = mementos.get(name)
+        if not m and alt_name:
+            m = mementos.get(alt_name)
+
         if not m:
             return None
 
-        return self.api_loader.parse_mem_value(m)
+        parsed = self.api_loader.parse_mem_value(m)
+        if not parsed:
+            return None
+
+        if parsed.ts == closest_ts:
+            return None
+
+        return parsed
 
     def __iter__(self):
         return self
 
     def next(self):
-        if self.m_closest and self.m_closest.sec:
-            return self.m_closest.use_ts_url()
+        if self.m_closest:
+            res = self.m_closest
+            self.m_closest = None
+            return res
 
-        if self.m_next and not self.m_next.sec:
+        if self.m_next:
             mementos = self.api_loader.timegate_query(self.m_next.ts, self.url)
-            self.m_next = self._get_mem_info(mementos, 'next')
+            self.m_next = self._get_mem_info(mementos, 'next', 'last', self.m_next.ts)
 
-        if self.m_prev and not self.m_prev.sec:
+        if self.m_prev:
             mementos = self.api_loader.timegate_query(self.m_prev.ts, self.url)
-            self.m_prev = self._get_mem_info(mementos, 'prev')
+            self.m_prev = self._get_mem_info(mementos, 'prev', 'first', self.m_prev.ts)
 
         if not self.m_next and self.m_prev:
-            return self.m_prev.use_ts_url()
+            res = self.m_prev
+            self.m_prev = None
         elif self.m_next and not self.m_prev:
-            return self.m_next.use_ts_url()
+            res = self.m_next
+            self.m_next = None
         elif not self.m_next and not self.m_prev:
             raise StopIteration()
-
-        if (abs(self.m_next.sec - self.target_sec) < abs(self.m_prev.sec - self.target_sec)):
-            return self.m_next.use_ts_url()
         else:
-            return self.m_prev.use_ts_url()
+            if (abs(self.m_next.sec - self.target_sec) <
+                abs(self.m_prev.sec - self.target_sec)):
+                res = self.m_next
+                self.m_next = None
+            else:
+                res = self.m_prev
+                self.m_prev = None
 
         return res
 
@@ -163,21 +165,23 @@ class MementoIndexServer(object):
         else:
             mem_iter = MementoTimemapQuery(self.loader, params['url'])
 
-        mem_iter = self.memento_to_cdx(params['url'], mem_iter)
+        limit = int(params.get('limit', 10))
+        mem_iter = self.memento_to_cdx(params['url'], mem_iter, limit)
         return mem_iter
 
-    def memento_to_cdx(self, url, mem_iter):
+    def memento_to_cdx(self, url, mem_iter, limit):
         key = canonicalize(url)
 
-        for ts, target in mem_iter:
-            if target.startswith(EXCLUDE_LIST):
+        for mem, _ in itertools.izip(mem_iter, xrange(0, limit)):
+            if mem.url.startswith(EXCLUDE_LIST):
                 continue
 
             cdx = CDXObject()
             cdx['urlkey'] = key
-            cdx['timestamp'] = ts
+            cdx['timestamp'] = mem.ts
             cdx['original'] = url
-            cdx['src_url'] = target
+            cdx['src_url'] = mem.url
+            cdx['sec'] = mem.sec
             yield cdx
             #cdx['mimetype'] = '-'
             #cdx['statuscode'] = '200'
