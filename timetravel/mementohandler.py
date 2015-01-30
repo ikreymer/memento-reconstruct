@@ -5,16 +5,39 @@ from pywb.webapp.replay_views import ReplayView, CaptureException
 from pywb.rewrite.wburl import WbUrl
 from pywb.rewrite.url_rewriter import UrlRewriter
 
-from pywb.framework.cache import create_cache
+from pywb.framework.basehandlers import WbUrlHandler
+from pywb.framework.wbrequestresponse import WbResponse
 
 import requests
 import re
+import json
 
 import urlparse
 import redis
 
 
 WBURL_RX = re.compile('(.*/)([0-9]{1,14})(\w{2}_)?(/https?://.*)')
+
+
+#=============================================================================
+class APIHandler(WbUrlHandler):
+    def __init__(self, config):
+        self.redis = redis.StrictRedis()
+
+    def __call__(self, wbrequest):
+        res = {}
+        self.redis = redis.StrictRedis()
+
+        wb_url = wbrequest.wb_url
+        page_key = wb_url.timestamp + '/' + wb_url.url
+
+        try:
+            res = self.redis.hgetall(page_key)
+        except:
+            pass
+
+        return WbResponse.text_response(json.dumps(res),
+                                        content_type='application/json')
 
 
 #=============================================================================

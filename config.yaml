@@ -19,6 +19,10 @@ collections:
         index_paths: $liveweb
         cookie_scope: root
 
+    api:
+        index_paths: $liveweb
+        wb_handler_class: !!python/name:timetravel.mementohandler.APIHandler
+
 
 redirect_to_exact: false
 
