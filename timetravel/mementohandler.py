@@ -24,7 +24,7 @@ WBURL_RX = re.compile('(.*/)([0-9]{1,14})(\w{2}_)?(/https?://.*)')
 #=============================================================================
 def init_redis(config):
     redis_url = os.environ.get('REDISCLOUD_URL')
-    print('REDIS CLOUD URL: ' + redis_url)
+    print('REDIS CLOUD URL: ' + str(redis_url))
     if not redis_url:
         redis_url = config.get('redis_url')
 
@@ -47,7 +47,7 @@ class APIHandler(WbUrlHandler):
 
         try:
             res = self.redis.hgetall('u:' + page_key)
-        except as e:
+        except Exception as e:
             print(e)
 
         return WbResponse.text_response(json.dumps(res),
