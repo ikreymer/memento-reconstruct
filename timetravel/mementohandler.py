@@ -20,18 +20,24 @@ import redis
 #=============================================================================
 WBURL_RX = re.compile('(.*/)([0-9]{1,14})(\w{2}_)?(/https?://.*)')
 
+redis_cli = None
 
 #=============================================================================
 def init_redis(config):
+    global redis_cli
+    if redis_cli:
+        return redis_cli
+
     redis_url = os.environ.get('REDISCLOUD_URL')
-    print('REDIS CLOUD URL: ' + str(redis_url))
     if not redis_url:
         redis_url = config.get('redis_url')
 
     if redis_url:
-        return redis.StrictRedis.from_url(redis_url)
+        redis_cli = redis.StrictRedis.from_url(redis_url)
     else:
-        return redis.StrictRedis()
+        redis_cli = redis.StrictRedis()
+
+    return redis_cli
 
 
 #=============================================================================
@@ -124,7 +130,7 @@ class LiveDirectLoader(object):
             target_sec = cdx['sec']
             self.redis.hset(full_key, '_target_sec', target_sec)
         else:
-            self.redis.hset(full_key, url_entry, cdx['sec'])
+            self.redis.hset(full_key, parts.netloc + ' ' + url_entry, cdx['sec'])
 
         self.redis.expire(full_key, 180)
 
