@@ -11,28 +11,41 @@ from pywb.framework.wbrequestresponse import WbResponse
 import requests
 import re
 import json
+import os
 
 import urlparse
 import redis
 
 
+#=============================================================================
 WBURL_RX = re.compile('(.*/)([0-9]{1,14})(\w{2}_)?(/https?://.*)')
+
+
+#=============================================================================
+def init_redis(config):
+    redis_url = os.environ.get('REDISCLOUD_URL')
+    if not redis_url:
+        redis_url = config.get('redis_url')
+
+    if redis_url:
+        return redis.StrictRedis.from_url(redis_url)
+    else:
+        return redis.StrictRedis()
 
 
 #=============================================================================
 class APIHandler(WbUrlHandler):
     def __init__(self, config):
-        self.redis = redis.StrictRedis()
+        self.redis = init_redis(config)
 
     def __call__(self, wbrequest):
         res = {}
-        self.redis = redis.StrictRedis()
 
         wb_url = wbrequest.wb_url
         page_key = wb_url.timestamp + '/' + wb_url.url
 
         try:
-            res = self.redis.hgetall(page_key)
+            res = self.redis.hgetall('u:' + page_key)
         except:
             pass
 
@@ -43,16 +56,18 @@ class APIHandler(WbUrlHandler):
 #=============================================================================
 class MementoHandler(WBHandler):
     def _init_replay_view(self, config):
-        return ReplayView(LiveDirectLoader(), config)
+        return ReplayView(LiveDirectLoader(config), config)
 
 
 #=============================================================================
 class LiveDirectLoader(object):
-    def __init__(self):
+    def __init__(self, config):
         self.session = requests.Session()
-        self.redis = redis.StrictRedis()
+        self.redis = init_redis(config)
 
-        #self.cache = create_cache()
+    @staticmethod
+    def url_key(wburl):
+        return wburl.timestamp + '/' + wburl.url
 
     def __call__(self, cdx, failed_files, cdx_loader, wbrequest):
         src_url = cdx['src_url']
@@ -81,33 +96,36 @@ class LiveDirectLoader(object):
         is_embed = False
         if wbrequest.referrer and wbrequest.referrer.startswith(wbrequest.wb_prefix):
             wb_url = WbUrl(wbrequest.referrer[len(wbrequest.wb_prefix):])
+            page_key = self.url_key(wb_url)
             is_embed = True
         else:
             wb_url = wbrequest.wb_url
 
-        page_key = wb_url.timestamp + '/' + wb_url.url
+        page_key = self.url_key(wb_url)
 
         if is_embed and wb_url.url.endswith('.css'):
             orig_ref = self.redis.get('r:' + page_key)
             if orig_ref:
                 wb_url = WbUrl(orig_ref)
-                page_key = wb_url.timestamp + '/' + wb_url.url
+                page_key = self.url_key(wb_url)
 
         elif is_embed and cdx['original'].endswith('.css'):
             self.redis.setex('r:' + cdx['timestamp'] + '/' + cdx['original'], 180, page_key)
 
         parts = urlparse.urlsplit(src_url)
 
-        self.redis.hincrby(page_key, 'h:' + parts.netloc, 1)
-        self.redis.expire(page_key, 600)
+        url_entry = self.url_key(wbrequest.wb_url)
 
-        target_sec = self.redis.hget(page_key, 'target_sec')
-        if not target_sec:
+        full_key = 'u:' + page_key
+
+        # top page
+        if url_entry == page_key:
             target_sec = cdx['sec']
-            self.redis.hset(page_key, 'target_sec', target_sec)
+            self.redis.hset(full_key, '_target_sec', target_sec)
         else:
-            diff = (cdx['sec'] - int(target_sec)) / (60 * 60)
-            self.redis.hincrby(page_key, 'd:' + str(diff), 1)
+            self.redis.hset(full_key, url_entry, cdx['sec'])
+
+        self.redis.expire(full_key, 180)
 
         statusline = str(response.status_code) + ' ' + response.reason
 
