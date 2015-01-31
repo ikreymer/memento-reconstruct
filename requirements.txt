@@ -1,2 +1,3 @@
+redis
 git+git://github.com/ikreymer/pywb.git@develop
 uwsgi>=2.0
