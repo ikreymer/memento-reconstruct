@@ -121,16 +121,19 @@ class LiveDirectLoader(object):
 
         parts = urlparse.urlsplit(src_url)
 
-        url_entry = self.url_key(wbrequest.wb_url)
-
         full_key = 'u:' + page_key
 
         # top page
-        if url_entry == page_key:
+        if not is_embed or (wbrequest.wb_url.url == wb_url.url and
+                            wbrequest.wb_url.timestamp == wb_url.timestamp):
             target_sec = cdx['sec']
             self.redis.hset(full_key, '_target_sec', target_sec)
         else:
-            self.redis.hset(full_key, parts.netloc + ' ' + url_entry, cdx['sec'])
+            value = (parts.netloc + ' ' +
+                     wbrequest.wb_url.timestamp + ' ' +
+                     wbrequest.wb_url.url)
+
+            self.redis.hset(full_key, value, cdx['sec'])
 
         self.redis.expire(full_key, 180)
 
