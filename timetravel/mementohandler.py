@@ -9,6 +9,7 @@ from pywb.framework.basehandlers import WbUrlHandler
 from pywb.framework.wbrequestresponse import WbResponse
 
 import requests
+import logging
 import re
 import json
 import os
@@ -54,7 +55,7 @@ class APIHandler(WbUrlHandler):
         try:
             res = self.redis.hgetall('u:' + page_key)
         except Exception as e:
-            print(e)
+            logging.debug(e)
 
         return WbResponse.text_response(json.dumps(res),
                                         content_type='application/json')
@@ -70,13 +71,23 @@ class MementoHandler(WBHandler):
             offset = int(wbrequest.wb_url.timestamp)
             if offset < 1:
                 offset = 1
-        except:
+        except Exception as e:
             offset = 1
+
+        cdx_lines = list(cdx_lines)
+
+        try:
+            cdx_json = [dict(host=cdx['src_host'], ts=cdx['timestamp']) for cdx in cdx_lines]
+            cdx_json = json.dumps(cdx_json)
+        except Exception as e:
+            logging.debug(e)
 
         return self.index_reader.make_cdx_response(wbrequest,
                                                    cdx_lines,
                                                    output,
-                                                   offset=offset)
+                                                   offset=offset,
+                                                   cdx_json=cdx_json)
+
 
 #=============================================================================
 class LiveDirectLoader(object):

@@ -38,7 +38,8 @@ class MementoJsonApi(object):
         try:
             r = self.session.get(full)
             result = r.json()
-        except:
+        except Exception as e:
+            logging.debug(e)
             msg = 'No Mementos Found'
             raise NotFoundException(msg, url=url)
 
@@ -49,7 +50,8 @@ class MementoJsonApi(object):
         try:
             r = self.session.get(full)
             result = r.json()
-        except:
+        except Exception as e:
+            logging.debug(e)
             msg = 'No Mementos Found'
             raise NotFoundException(msg, url=url)
 

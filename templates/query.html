@@ -21,14 +21,53 @@ function ts_to_date(ts, is_gmt)
         return date.toLocaleString();
     }
 }
+
+var cdx_json = {{ cdx_json | safe }};
 </script>
+
+
+<script src="/static/m/d3.v3.min.js"> </script>
+<script src="/static/m/nv.d3.js"> </script>
+<link href="/static/m/nv.d3.css" rel="stylesheet"/>
+
+<script>
+
+function agg_by_host(data) {
+  var res = d3.nest()
+  .key(function(d) { return d.host})
+  .rollup(function(d) { return d.length; })
+  .entries(data);
+
+  console.log(res);
+  return res;
+}
+
+function init_chart() {
+    nv.addGraph(function() {
+      var chart = nv.models.pieChart()
+          .x(function(d) { return d.key + " = " + d.values;})
+          .y(function(d) { return d.values })
+          .showLabels(false);
+
+        d3.select("#hostchart svg")
+            .datum(agg_by_host(cdx_json))
+            .transition().duration(350)
+            .call(chart);
+
+      return chart;
+    });
+}
+
+</script>
+
 </head>
 <body>
   <h2>TimeTravel Timemap</h2>
   {% if cdx_lines | length > 0 %}
   {% set page_size = 1000 %}
 
-  <b>Showing {{ offset }} to {{ offset - 1 + cdx_lines | length }}</b> captures of <b>{{ url }}</b>
+  <p>Showing <b>{{ offset }}</b> to <b>{{ offset - 1 + cdx_lines | length }}</b> captures of <b>{{ url }}</b>
+  </p>
 
   <p>
   {% if offset >= page_size %}
@@ -40,7 +79,7 @@ function ts_to_date(ts, is_gmt)
   {% endif %}
   </p>
 
-  <b>
+  <div style="display: inline-block">
   <table id="captures" style="border-spacing: 10px;">
     <tr>
       <th>Capture</th>
@@ -57,8 +96,13 @@ function ts_to_date(ts, is_gmt)
     </tr>
     {% endfor %}
   </table>
-  <p>
-  </p>
+  </div>
+
+  <div id='hostchart' style="display: inline-block; vertical-align: top; width: 500px; height: 500px">
+  <svg></svg>
+  </div>
+  <script>init_chart();</script>
+
   {% else %}
   <i>No captures found for <b>{{ url }}</b></i>
   {% endif %}

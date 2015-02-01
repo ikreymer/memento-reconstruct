@@ -1,6 +1,6 @@
 static_routes:
           static/default: pywb/static/
-          static/js: ./js/
+          static/m: ./static/
 
 
 collections:
