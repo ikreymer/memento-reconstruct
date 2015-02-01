@@ -1,0 +1,66 @@
+<html>
+<head>
+<script>
+function ts_to_date(ts, is_gmt)
+{
+    if (ts.length < 14) {
+        return ts;
+    }
+
+    var datestr = (ts.substring(0, 4) + "-" +
+                  ts.substring(4, 6) + "-" +
+                  ts.substring(6, 8) + "T" +
+                  ts.substring(8, 10) + ":" +
+                  ts.substring(10, 12) + ":" +
+                  ts.substring(12, 14) + "-00:00");
+
+    var date = new Date(datestr);
+    if (is_gmt) {
+        return date.toGMTString();
+    } else {
+        return date.toLocaleString();
+    }
+}
+</script>
+</head>
+<body>
+  <h2>TimeTravel Timemap</h2>
+  {% if cdx_lines | length > 0 %}
+  {% set page_size = 1000 %}
+
+  <b>Showing {{ offset }} to {{ offset - 1 + cdx_lines | length }}</b> captures of <b>{{ url }}</b>
+
+  <p>
+  {% if offset >= page_size %}
+  <a href="{{ prefix }}{{ offset - page_size }}*/{{ url }}">Prev Results</a>
+  {% endif %}
+
+  {% if page_size == cdx_lines | length %}
+  <a href="{{ prefix }}{{ offset + page_size }}*/{{ url }}">Next Results</a>
+  {% endif %}
+  </p>
+
+  <b>
+  <table id="captures" style="border-spacing: 10px;">
+    <tr>
+      <th>Capture</th>
+      <th>Original Url</th>
+      <th>Archive Host</th>
+    </tr>
+    {% for cdx in cdx_lines  %}
+    <tr style="{{ 'font-weight: bold' if cdx['mimetype'] != 'warc/revisit' else '' }}">
+      <td><a href="{{ prefix }}{{ cdx.timestamp }}/{{ cdx.url }}">
+      <script>document.write(ts_to_date("{{ cdx['timestamp']}}", true))</script>
+      </a></td>
+      <td>{{ cdx.url }}</td>
+      <td>{{ cdx.src_host }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+  <p>
+  </p>
+  {% else %}
+  <i>No captures found for <b>{{ url }}</b></i>
+  {% endif %}
+</body>
+</html>

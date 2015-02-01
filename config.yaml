@@ -24,6 +24,8 @@ collections:
         wb_handler_class: !!python/name:timetravel.mementohandler.APIHandler
 
 
+query_html: ./templates/query.html
+
 redirect_to_exact: false
 
 framed_replay: true

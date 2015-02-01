@@ -12,6 +12,7 @@ from pywb.utils.timeutils import timestamp_to_sec
 from pywb.utils.wbexception import AccessException, NotFoundException
 
 import logging
+from urlparse import urlsplit
 
 
 EXCLUDE_LIST = ('http://archive.today/')
@@ -26,7 +27,7 @@ MemValue = namedtuple('MemValue', 'ts, sec, url')
 
 
 #=============================================================================
-class MementoApi(object):
+class MementoJsonApi(object):
     def __init__(self, paths):
         self.api_endpoint = paths[0]
         self.timemap_endpoint = paths[1]
@@ -43,11 +44,14 @@ class MementoApi(object):
 
         return result['mementos']
 
-    def timemap_query(self, url, page=1):
-        full = self.timemap_endpoint + '/' + str(page) + '/' + url
-        #print('LOADING: ' + full)
-        r = self.session.get(full)
-        result = r.json()
+    def timemap_query(self, url, closest='1'):
+        full = self.timemap_endpoint + closest + '/' + url
+        try:
+            r = self.session.get(full)
+            result = r.json()
+        except:
+            msg = 'No Mementos Found'
+            raise NotFoundException(msg, url=url)
 
         return result['mementos']
 
@@ -63,14 +67,16 @@ class MementoApi(object):
 
 #=============================================================================
 class MementoTimemapQuery(object):
-    def __init__(self, api_loader, url):
+    def __init__(self, api_loader, url, closest='1'):
         self.api_loader = api_loader
+        self.closest = closest
+        self.url = url
 
-        mementos = api_loader.timemap_query(url)
+    def __iter__(self):
+        mementos = self.api_loader.timemap_query(self.url, self.closest)
         self.memento_list = mementos['list']
         self.memento_iter = iter(self.memento_list)
 
-    def __iter__(self):
         return self
 
     def next(self):
@@ -86,13 +92,8 @@ class MementoClosestQuery(object):
     def __init__(self, api_loader, url, timestamp):
         self.api_loader = api_loader
         self.url = url
+        self.target_timestamp = timestamp
         self.target_sec = timestamp_to_sec(timestamp)
-
-        mementos = self.api_loader.timegate_query(timestamp, self.url)
-
-        self.m_closest = self._get_mem_info(mementos, 'closest')
-        self.m_next = self._get_mem_info(mementos, 'next', 'last', self.m_closest.ts)
-        self.m_prev = self._get_mem_info(mementos, 'prev', 'first', self.m_closest.ts)
 
     def _get_mem_info(self, mementos, name, alt_name=None, closest_ts=None):
         m = mementos.get(name)
@@ -112,6 +113,12 @@ class MementoClosestQuery(object):
         return parsed
 
     def __iter__(self):
+        mementos = self.api_loader.timegate_query(self.target_timestamp, self.url)
+
+        self.m_closest = self._get_mem_info(mementos, 'closest')
+        self.m_next = self._get_mem_info(mementos, 'next', 'last', self.m_closest.ts)
+        self.m_prev = self._get_mem_info(mementos, 'prev', 'first', self.m_closest.ts)
+
         return self
 
     def next(self):
@@ -151,7 +158,7 @@ class MementoClosestQuery(object):
 #=============================================================================
 class MementoIndexServer(object):
     def __init__(self, paths, **kwargs):
-        self.loader = MementoApi(paths)
+        self.loader = MementoJsonApi(paths)
         logging.basicConfig(level=logging.DEBUG)
 
     def load_cdx(self, **params):
@@ -162,19 +169,39 @@ class MementoIndexServer(object):
                 closest = '3000'
 
             mem_iter = MementoClosestQuery(self.loader, params['url'], closest)
+            skip_exclude=True
         else:
-            mem_iter = MementoTimemapQuery(self.loader, params['url'])
+            closest = params.get('query_closest')
+            try:
+                closest = int(closest)
+                if closest < 1:
+                    closest = '1'
+                else:
+                    closest = str(closest)
+            except:
+                closest = '1'
+
+            mem_iter = MementoTimemapQuery(self.loader, params['url'], closest)
+            skip_exclude=False
 
         limit = int(params.get('limit', 10))
-        mem_iter = self.memento_to_cdx(params['url'], mem_iter, limit)
+
+        mem_iter = self.memento_to_cdx(params['url'],
+                                       mem_iter,
+                                       limit,
+                                       skip_exclude)
         return mem_iter
 
-    def memento_to_cdx(self, url, mem_iter, limit):
+    def memento_to_cdx(self, url, mem_iter, limit, skip_exclude=True):
         key = canonicalize(url)
 
         for mem, _ in itertools.izip(mem_iter, xrange(0, limit)):
+            excluded = False
             if mem.url.startswith(EXCLUDE_LIST):
-                continue
+                if skip_exclude:
+                    continue
+                else:
+                    excluded = True
 
             cdx = CDXObject()
             cdx['urlkey'] = key
@@ -182,14 +209,9 @@ class MementoIndexServer(object):
             cdx['original'] = url
             cdx['src_url'] = mem.url
             cdx['sec'] = mem.sec
+            cdx['src_host'] = urlsplit(mem.url).netloc
+            cdx['excluded'] = excluded
             yield cdx
-            #cdx['mimetype'] = '-'
-            #cdx['statuscode'] = '200'
-            #cdx['digest'] = '-'
-            #cdx['length'] = '-1'
-            #cdx['offset'] = '0'
-            #cdx['filename'] = filename
-
 
 def memento_to_cdx(url, mem):
     key = canonicalize(url)
@@ -198,7 +220,7 @@ def memento_to_cdx(url, mem):
 
 
 def main():
-    loader = MementoApi(['http://timetravel.mementoweb.org/api/json/',
+    loader = MementoJsonApi(['http://timetravel.mementoweb.org/api/json/',
                          'http://timetravel.mementoweb.org/timemap/json/'])
 
     q = MementoClosestQuery(loader, sys.argv[2], sys.argv[1])

@@ -65,6 +65,18 @@ class MementoHandler(WBHandler):
     def _init_replay_view(self, config):
         return ReplayView(LiveDirectLoader(config), config)
 
+    def handle_query(self, wbrequest, cdx_lines, output):
+        try:
+            offset = int(wbrequest.wb_url.timestamp)
+            if offset < 1:
+                offset = 1
+        except:
+            offset = 1
+
+        return self.index_reader.make_cdx_response(wbrequest,
+                                                   cdx_lines,
+                                                   output,
+                                                   offset=offset)
 
 #=============================================================================
 class LiveDirectLoader(object):
@@ -75,6 +87,12 @@ class LiveDirectLoader(object):
     @staticmethod
     def url_key(wburl):
         return wburl.timestamp + '/' + wburl.url
+
+    def is_embed_ref(self, url):
+        """ Is this url an embedded referrer
+        So far, it seems .css files are embeds that are also referrers
+        """
+        return url.split('?')[0].endswith('.css')
 
     def __call__(self, cdx, failed_files, cdx_loader, wbrequest):
         src_url = cdx['src_url']
@@ -110,13 +128,13 @@ class LiveDirectLoader(object):
 
         page_key = self.url_key(wb_url)
 
-        if is_embed and wb_url.url.endswith('.css'):
+        if is_embed and self.is_embed_ref(wb_url.url):
             orig_ref = self.redis.get('r:' + page_key)
             if orig_ref:
                 wb_url = WbUrl(orig_ref)
                 page_key = self.url_key(wb_url)
 
-        elif is_embed and cdx['original'].endswith('.css'):
+        elif is_embed and self.is_embed_ref(cdx['original']):
             self.redis.setex('r:' + cdx['timestamp'] + '/' + cdx['original'], 180, page_key)
 
         parts = urlparse.urlsplit(src_url)
