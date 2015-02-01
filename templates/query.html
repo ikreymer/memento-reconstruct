@@ -83,15 +83,21 @@ function init_chart() {
   <table id="captures" style="border-spacing: 10px;">
     <tr>
       <th>Capture</th>
-      <th>Original Url</th>
       <th>Archive Host</th>
     </tr>
     {% for cdx in cdx_lines  %}
-    <tr style="{{ 'font-weight: bold' if cdx['mimetype'] != 'warc/revisit' else '' }}">
-      <td><a href="{{ prefix }}{{ cdx.timestamp }}/{{ cdx.url }}">
+    <tr style="{{ 'font-style: italic' if cdx.excluded else '' }}">
+      <td>
+
+      {% if not cdx.excluded %}
+      <a href="{{ prefix }}{{ cdx.timestamp }}/{{ cdx.url }}">
       <script>document.write(ts_to_date("{{ cdx['timestamp']}}", true))</script>
-      </a></td>
-      <td>{{ cdx.url }}</td>
+      </a>
+      {% else %}
+      <script>document.write(ts_to_date("{{ cdx['timestamp']}}", true))</script>
+      {% endif %}
+
+      </td>
       <td>{{ cdx.src_host }}</td>
     </tr>
     {% endfor %}
