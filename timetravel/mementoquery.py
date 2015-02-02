@@ -57,7 +57,7 @@ class MementoJsonApi(object):
                 msg = 'No Mementos Currently Available: <br/>'
                 msg += r.text
             elif r.status_code == 404:
-                msg = 'No Mementos Found'
+                return {"list": []}
             else:
                 msg = 'Unknown response with: ' + str(r.status_code)
 

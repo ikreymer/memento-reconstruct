@@ -1,6 +1,7 @@
 function agg_by_host(data) {
   var res = d3.nest()
   .key(function(d) { return d.host})
+  .sortKeys(d3.ascending)
   .rollup(function(d) { return d.length; })
   .entries(data);
 
