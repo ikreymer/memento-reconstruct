@@ -1,6 +1,8 @@
 from pywb.webapp.handlers import WBHandler
 from pywb.utils.statusandheaders import StatusAndHeaders
 from pywb.webapp.replay_views import ReplayView, CaptureException
+from pywb.utils.canonicalize import canonicalize
+
 
 from pywb.rewrite.wburl import WbUrl
 from pywb.rewrite.url_rewriter import UrlRewriter
@@ -42,6 +44,15 @@ def init_redis(config):
 
 
 #=============================================================================
+def get_url_key(wburl):
+    return get_url_key_p(wburl.timestamp, wburl.url)
+
+
+def get_url_key_p(ts, url):
+    return ts + '/' + canonicalize(url, False)
+
+
+#=============================================================================
 class APIHandler(WbUrlHandler):
     def __init__(self, config):
         self.redis = init_redis(config)
@@ -50,7 +61,7 @@ class APIHandler(WbUrlHandler):
         res = {}
 
         wb_url = wbrequest.wb_url
-        page_key = wb_url.timestamp + '/' + wb_url.url
+        page_key = get_url_key(wb_url)
 
         try:
             res = self.redis.hgetall('u:' + page_key)
@@ -95,10 +106,6 @@ class LiveDirectLoader(object):
         self.session = requests.Session()
         self.redis = init_redis(config)
 
-    @staticmethod
-    def url_key(wburl):
-        return wburl.timestamp + '/' + wburl.url
-
     def is_embed_ref(self, url):
         """ Is this url an embedded referrer
         So far, it seems .css files are embeds that are also referrers
@@ -132,38 +139,36 @@ class LiveDirectLoader(object):
         is_embed = False
         if wbrequest.referrer and wbrequest.referrer.startswith(wbrequest.wb_prefix):
             wb_url = WbUrl(wbrequest.referrer[len(wbrequest.wb_prefix):])
-            page_key = self.url_key(wb_url)
             is_embed = True
         else:
             wb_url = wbrequest.wb_url
 
-        page_key = self.url_key(wb_url)
+        page_key = get_url_key(wb_url)
 
         if is_embed and self.is_embed_ref(wb_url.url):
             orig_ref = self.redis.get('r:' + page_key)
             if orig_ref:
                 wb_url = WbUrl(orig_ref)
-                page_key = self.url_key(wb_url)
+                page_key = get_url_key(wb_url)
 
         elif is_embed and self.is_embed_ref(cdx['original']):
-            self.redis.setex('r:' + cdx['timestamp'] + '/' + cdx['original'], 180, page_key)
+            self.redis.setex('r:' + get_url_key_p(cdx['timestamp'], cdx['original']), 180, page_key)
 
         parts = urlparse.urlsplit(src_url)
 
         full_key = 'u:' + page_key
 
         # top page
-        if not is_embed or (wbrequest.wb_url.url == wb_url.url and
-                            wbrequest.wb_url.timestamp == wb_url.timestamp):
-            target_sec = cdx['sec']
-            self.redis.hset(full_key, '_target_sec', target_sec)
-        else:
-            value = (parts.netloc + ' ' +
-                     wbrequest.wb_url.timestamp + ' ' +
-                     wbrequest.wb_url.url)
+        #if not is_embed or (wbrequest.wb_url.url == wb_url.url and
+        #                    wbrequest.wb_url.timestamp == wb_url.timestamp):
+        #    target_sec = cdx['sec']
+        #    self.redis.hset(full_key, '_target_sec', target_sec)
 
-            self.redis.hset(full_key, value, cdx['sec'])
+        value = (parts.netloc + ' ' +
+                 wbrequest.wb_url.timestamp + ' ' +
+                 wbrequest.wb_url.url)
 
+        self.redis.hset(full_key, value, cdx['sec'])
         self.redis.expire(full_key, 180)
 
         statusline = str(response.status_code) + ' ' + response.reason

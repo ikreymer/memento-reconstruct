@@ -1,6 +1,7 @@
 import requests
 import sys
 import calendar
+import datetime
 import itertools
 
 from collections import namedtuple
@@ -40,7 +41,7 @@ class MementoJsonApi(object):
             result = r.json()
         except Exception as e:
             logging.debug(e)
-            msg = 'No Mementos Found'
+            msg = 'No Mementos Currently Available'
             raise NotFoundException(msg, url=url)
 
         return result['mementos']
@@ -52,7 +53,14 @@ class MementoJsonApi(object):
             result = r.json()
         except Exception as e:
             logging.debug(e)
-            msg = 'No Mementos Found'
+            if r.status_code == 503:
+                msg = 'No Mementos Currently Available: <br/>'
+                msg += r.text
+            elif r.status_code == 404:
+                msg = 'No Mementos Found'
+            else:
+                msg = 'Unknown response with: ' + str(r.status_code)
+
             raise NotFoundException(msg, url=url)
 
         return result['mementos']
@@ -97,11 +105,8 @@ class MementoClosestQuery(object):
         self.target_timestamp = timestamp
         self.target_sec = timestamp_to_sec(timestamp)
 
-    def _get_mem_info(self, mementos, name, alt_name=None, closest_ts=None):
+    def _get_mem_info(self, mementos, name, closest_ts=None):
         m = mementos.get(name)
-        if not m and alt_name:
-            m = mementos.get(alt_name)
-
         if not m:
             return None
 
@@ -118,57 +123,58 @@ class MementoClosestQuery(object):
         mementos = self.api_loader.timegate_query(self.target_timestamp, self.url)
 
         self.m_closest = self._get_mem_info(mementos, 'closest')
-        self.m_next = self._get_mem_info(mementos, 'next', 'last', self.m_closest.ts)
-        self.m_prev = self._get_mem_info(mementos, 'prev', 'first', self.m_closest.ts)
+        self.m_next = self._get_mem_info(mementos, 'next', self.m_closest.ts)
+        self.m_prev = self._get_mem_info(mementos, 'prev', self.m_closest.ts)
+
+        self.m_last = self._get_mem_info(mementos, 'last', self.m_closest.ts)
+        self.m_first = self._get_mem_info(mementos, 'first', self.m_closest.ts)
 
         return self
 
     def next(self):
+        if not self.m_closest:
+            if self.m_next and self.m_prev:
+                if (abs(self.m_next.sec - self.target_sec) <
+                    abs(self.m_prev.sec - self.target_sec)):
+                    self.set_next_closest(self.m_next)
+                else:
+                    self.set_next_closest(self.m_prev)
+
+            elif not self.m_next and self.m_prev:
+                self.set_next_closest(self.m_prev)
+            elif self.m_next and not self.m_prev:
+                self.set_next_closest(self.m_next)
+
         if self.m_closest:
             res = self.m_closest
             self.m_closest = None
-            return res
-
-        if self.m_next:
-            mementos = self.api_loader.timegate_query(self.m_next.ts, self.url)
-            self.m_next = self._get_mem_info(mementos, 'next', 'last', self.m_next.ts)
-
-        if self.m_prev:
-            mementos = self.api_loader.timegate_query(self.m_prev.ts, self.url)
-            self.m_prev = self._get_mem_info(mementos, 'prev', 'first', self.m_prev.ts)
-
-        if not self.m_next and self.m_prev:
-            res = self.m_prev
-            self.m_prev = None
-        elif self.m_next and not self.m_prev:
-            res = self.m_next
-            self.m_next = None
-        elif not self.m_next and not self.m_prev:
-            raise StopIteration()
+            return (res, self.m_next, self.m_prev, self.m_first, self.m_last)
         else:
-            if (abs(self.m_next.sec - self.target_sec) <
-                abs(self.m_prev.sec - self.target_sec)):
-                res = self.m_next
-                self.m_next = None
-            else:
-                res = self.m_prev
-                self.m_prev = None
+            raise StopIteration()
 
-        return res
+    def set_next_closest(self, curr):
+        mementos = self.api_loader.timegate_query(curr.ts, self.url)
+        self.m_closest = self._get_mem_info(mementos, 'closest')
+
+        if curr == self.m_next:
+            self.m_next = self._get_mem_info(mementos, 'next', curr.ts)
+
+        elif curr == self.m_prev:
+            self.m_prev = self._get_mem_info(mementos, 'prev', curr.ts)
 
 
 #=============================================================================
 class MementoIndexServer(object):
     def __init__(self, paths, **kwargs):
         self.loader = MementoJsonApi(paths)
-        logging.basicConfig(level=logging.DEBUG)
+        #logging.basicConfig(level=logging.DEBUG)
 
     def load_cdx(self, **params):
         sort = params.get('sort')
         if sort == 'closest' or sort == 'reverse':
             closest = params.get('closest')
             if not closest:
-                closest = '3000'
+                closest = str(datetime.date.today().year)
 
             mem_iter = MementoClosestQuery(self.loader, params['url'], closest)
             skip_exclude=True
@@ -197,7 +203,8 @@ class MementoIndexServer(object):
     def memento_to_cdx(self, url, mem_iter, limit, skip_exclude=True):
         key = canonicalize(url)
 
-        for mem, _ in itertools.izip(mem_iter, xrange(0, limit)):
+        for mems, _ in itertools.izip(mem_iter, xrange(0, limit)):
+            mem, next_, prev_, first_, last_ = mems
             excluded = False
             if mem.url.startswith(EXCLUDE_LIST):
                 if skip_exclude:
@@ -213,24 +220,36 @@ class MementoIndexServer(object):
             cdx['sec'] = mem.sec
             cdx['src_host'] = urlsplit(mem.url).netloc
             cdx['excluded'] = excluded
+
+            cdx['first'] = first_.ts if first_ else ''
+            cdx['last'] = last_.ts if last_ else ''
+            cdx['next'] = next_.ts if next_ else ''
+            cdx['prev'] = prev_.ts if prev_ else ''
             yield cdx
 
-def memento_to_cdx(url, mem):
+
+def test_memento_to_cdx(url, mem):
     key = canonicalize(url)
     for ts, target in mem:
         yield key + ' ' + ts + ' ' + url + ' ' + target
 
 
 def main():
-    loader = MementoJsonApi(['http://timetravel.mementoweb.org/api/json/',
-                         'http://timetravel.mementoweb.org/timemap/json/'])
+    server = MementoIndexServer(['http://timetravel.mementoweb.org/api/json/',
+                                 'http://timetravel.mementoweb.org/timemap/json/'])
 
-    q = MementoClosestQuery(loader, sys.argv[2], sys.argv[1])
+    cdx_iter = server.load_cdx(closest=sys.argv[1],
+                               url=sys.argv[2],
+                               sort='closest',
+                               limit=int(sys.argv[3]))
 
-    n = int(sys.argv[3])
-    q = memento_to_cdx(sys.argv[2], q)
-    for v, _ in itertools.izip(q, xrange(0, n)):
-        print(v)
+    sec = None
+    for cdx in cdx_iter:
+        if not sec:
+            sec = cdx['sec']
+        #print(cdx['timestamp'] + ' ' + cdx['original'] + ' ' + cdx['src_host'] + ' ' + str(sec - cdx['sec']))
+        print(cdx['prev'] + ' ' + cdx['timestamp'] + ' ' + cdx['next'] + ' ' + str(sec - cdx['sec']))
+
 
 if __name__ == "__main__":
     main()

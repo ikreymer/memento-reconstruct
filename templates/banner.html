@@ -1,0 +1,171 @@
+{% if cdx %}
+<script>
+  wbinfo.m_first = "{{ cdx.first }}";
+  wbinfo.m_last = "{{ cdx.last }}";
+  wbinfo.m_prev = "{{ cdx.prev }}";
+  wbinfo.m_next = "{{ cdx.next }}";
+</script>
+{% else %}
+
+<script src="/static/m/d3.v3.min.js"> </script>
+<script src="/static/m/nv.d3.js"> </script>
+<link href="/static/m/nv.d3.css" rel="stylesheet"/>
+
+<script src="/static/m/chart.js"> </script>
+
+<style>
+#mt_banner
+{
+    font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif !important;
+    width: 100% !important;
+    font-size: 18px; !important;
+    background-color: lightYellow !important;
+    display: block;
+
+    position: absolute !important;
+    border: 0px;
+    height: 120px !important;
+}
+
+.wb_iframe_div
+{
+   width: 100%;
+   height: 100%;
+   padding: 120px 4px 4px 0px;
+}
+
+#mt_banner p
+{
+    display: inline-block;
+ /*   vertical-align: top;*/
+    margin-left: 8px;
+}
+</style>
+
+<script>
+
+var updater_id = undefined;
+
+_wb_js.create_banner_element = function(banner_id)
+{
+    if (document.readyState !== 'complete') {
+        updater_id = window.setInterval(update_while_loading, 2000);
+    };
+
+    banner_id = "mt_banner";
+    var banner = document.createElement("wb_div");
+    banner.setAttribute("id", banner_id);
+    banner.setAttribute("lang", "en");
+
+    var capture_str = "";
+
+    if (wbinfo && wbinfo.timestamp) {
+        capture_str = _wb_js.ts_to_date(wbinfo.timestamp, true);
+    }
+
+    var contents = '<div style="display: inline-block">';
+    contents += '<div style="float: left"><b>' + capture_str + '</b><br/>';
+    contents += '<p id="timemap"><a href="' + wbinfo.prefix + "*/" + wbinfo.capture_url + '"><b>Timemap</b></a></p>';
+    contents += '<p id="m_first"></p>';
+    contents += '<p id="m_prev"></p>';
+    contents += '<p id="m_next"></p>';
+    contents += '<p id="m_last"></p>';
+    contents += '</div></div>';
+
+    contents += '<div id="hostchart" style="display: inline-block; width: 550px; height: 120px"><svg></svg></div>';
+
+    banner.innerHTML = contents;
+    document.body.insertBefore(banner, document.body.firstChild);
+
+    //document.getElementById("myframe").addEventListener('load', clear_update);
+
+    return banner_id;
+}
+
+function update_while_loading()
+{
+    if (document.readyState === 'complete') {
+        window.clearInterval(updater_id);
+    }
+
+    add_memento_links();
+
+    var url;
+
+    if (curr_state && curr_state.url) {
+        url = curr_state.url;
+    } else {
+        url = wbinfo.capture_url;
+    }
+
+    load_api(url);
+}
+
+var memento_links_added = false;
+
+function add_memento_links()
+{
+    if (memento_links_added) {
+        return;
+    }
+
+    if (!window.frames[0].wbinfo) {
+        return;
+    }
+
+    memento_links_added = true;
+
+    function add_link(type, name) {
+        var memento_ts = window.frames[0].wbinfo["m_" + type];
+        if (!memento_ts || memento_ts == "") {
+            return;
+        }
+
+        var elem = document.getElementById("m_" + type);
+        if (elem) {
+            var full_url = wbinfo.prefix + memento_ts + "/" + wbinfo.capture_url;
+            var link = document.createElement("a");
+            link.setAttribute("href", full_url);
+            link.innerText = name;
+            elem.appendChild(link);
+        }
+    }
+
+    add_link("first", "<< First");
+    add_link("prev", "< Prev");
+    add_link("next", "Next >");
+    add_link("last", "Last >>");
+}
+
+function load_api(url)
+{
+    var full_url = "/api/" + wbinfo.timestamp + "/" + url;
+
+    d3.json(full_url, function(error, json) {
+        if (error) {
+            console.log(error);
+            return;
+        }
+
+        var mementos = [];
+
+        for (var key in json) {
+            if (key == "_target_sec") {
+                continue;
+            }
+
+            var list = key.split(" ");
+            mementos.push({"host": list[0],
+                           "ts": list[1],
+                           "url": list[2]});
+        }
+
+        if (mementos && mementos.length > 0) {
+            init_host_chart(mementos);
+        }
+    });
+}
+
+
+</script>
+{% endif %}

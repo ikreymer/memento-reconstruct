@@ -26,6 +26,8 @@ collections:
 
 query_html: ./templates/query.html
 
+banner_html: ./templates/banner.html
+
 redirect_to_exact: false
 
 framed_replay: true

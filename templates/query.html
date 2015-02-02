@@ -30,35 +30,7 @@ var cdx_json = {{ cdx_json | safe }};
 <script src="/static/m/nv.d3.js"> </script>
 <link href="/static/m/nv.d3.css" rel="stylesheet"/>
 
-<script>
-
-function agg_by_host(data) {
-  var res = d3.nest()
-  .key(function(d) { return d.host})
-  .rollup(function(d) { return d.length; })
-  .entries(data);
-
-  console.log(res);
-  return res;
-}
-
-function init_chart() {
-    nv.addGraph(function() {
-      var chart = nv.models.pieChart()
-          .x(function(d) { return d.key + " = " + d.values;})
-          .y(function(d) { return d.values })
-          .showLabels(false);
-
-        d3.select("#hostchart svg")
-            .datum(agg_by_host(cdx_json))
-            .transition().duration(350)
-            .call(chart);
-
-      return chart;
-    });
-}
-
-</script>
+<script src="/static/m/chart.js"> </script>
 
 </head>
 <body>
@@ -107,7 +79,7 @@ function init_chart() {
   <div id='hostchart' style="display: inline-block; vertical-align: top; width: 500px; height: 500px">
   <svg></svg>
   </div>
-  <script>init_chart();</script>
+  <script>init_host_chart(cdx_json);</script>
 
   {% else %}
   <i>No captures found for <b>{{ url }}</b></i>
