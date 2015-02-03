@@ -155,9 +155,12 @@ function load_api(url)
             }
 
             var list = key.split(" ");
+            var sec = parseInt(json[key]);
+
             mementos.push({"host": list[0],
                            "ts": list[1],
-                           "url": list[2]});
+                           "url": list[2],
+                           "sec": sec});
         }
 
         if (mementos && mementos.length > 0) {

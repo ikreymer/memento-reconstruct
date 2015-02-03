@@ -27,3 +27,7 @@ function init_host_chart(memento_list) {
     });
 }
 
+
+function init_scatter(memento_list) {
+
+}

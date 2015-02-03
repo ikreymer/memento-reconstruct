@@ -90,7 +90,7 @@ class MementoTimemapQuery(object):
         return self
 
     def next(self):
-        return self.api_loader.parse_mem_value(self.memento_iter.next())
+        return (self.api_loader.parse_mem_value(self.memento_iter.next()),)
 
 
 #=============================================================================
@@ -204,7 +204,12 @@ class MementoIndexServer(object):
         key = canonicalize(url)
 
         for mems, _ in itertools.izip(mem_iter, xrange(0, limit)):
-            mem, next_, prev_, first_, last_ = mems
+
+            if len(mems) > 1:
+                mem, next_, prev_, first_, last_ = mems
+            else:
+                mem = mems[0]
+
             excluded = False
             if mem.url.startswith(EXCLUDE_LIST):
                 if skip_exclude:
@@ -221,10 +226,11 @@ class MementoIndexServer(object):
             cdx['src_host'] = urlsplit(mem.url).netloc
             cdx['excluded'] = excluded
 
-            cdx['first'] = first_.ts if first_ else ''
-            cdx['last'] = last_.ts if last_ else ''
-            cdx['next'] = next_.ts if next_ else ''
-            cdx['prev'] = prev_.ts if prev_ else ''
+            if len(mems) > 1:
+                cdx['first'] = first_.ts if first_ else ''
+                cdx['last'] = last_.ts if last_ else ''
+                cdx['next'] = next_.ts if next_ else ''
+                cdx['prev'] = prev_.ts if prev_ else ''
             yield cdx
 
 
