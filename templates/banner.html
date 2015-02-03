@@ -64,7 +64,7 @@ _wb_js.create_banner_element = function(banner_id)
     }
 
     var contents = '<div style="display: inline-block">';
-    contents += '<div style="float: left"><b>' + capture_str + '</b><br/>';
+    contents += '<div style="float: left"><b style="margin-left: 8px">' + capture_str + '</b><br/>';
     contents += '<p id="timemap"><a href="' + wbinfo.prefix + "*/" + wbinfo.capture_url + '"><b>Timemap</b></a></p>';
     contents += '<p id="m_first"></p>';
     contents += '<p id="m_prev"></p>';
@@ -72,7 +72,8 @@ _wb_js.create_banner_element = function(banner_id)
     contents += '<p id="m_last"></p>';
     contents += '</div></div>';
 
-    contents += '<div id="hostchart" style="display: inline-block; width: 550px; height: 120px"><svg></svg></div>';
+    contents += '<div id="hostchart" style="display: inline-block; width: 300px; height: 120px"><svg></svg></div>';
+    contents += '<div id="scatter" style="display: inline-block; width: 600px; height: 120px"><svg></svg></div>';
 
     banner.innerHTML = contents;
     document.body.insertBefore(banner, document.body.firstChild);
@@ -136,39 +137,6 @@ function add_memento_links()
     add_link("next", "Next >");
     add_link("last", "Last >>");
 }
-
-function load_api(url)
-{
-    var full_url = "/api/" + wbinfo.timestamp + "/" + url;
-
-    d3.json(full_url, function(error, json) {
-        if (error) {
-            console.log(error);
-            return;
-        }
-
-        var mementos = [];
-
-        for (var key in json) {
-            if (key == "_target_sec") {
-                continue;
-            }
-
-            var list = key.split(" ");
-            var sec = parseInt(json[key]);
-
-            mementos.push({"host": list[0],
-                           "ts": list[1],
-                           "url": list[2],
-                           "sec": sec});
-        }
-
-        if (mementos && mementos.length > 0) {
-            init_host_chart(mementos);
-        }
-    });
-}
-
 
 </script>
 {% endif %}
