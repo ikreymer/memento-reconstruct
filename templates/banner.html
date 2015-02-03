@@ -45,6 +45,7 @@
 <script>
 
 var updater_id = undefined;
+var memento_links_current = false;
 
 _wb_js.create_banner_element = function(banner_id)
 {
@@ -82,6 +83,8 @@ _wb_js.create_banner_element = function(banner_id)
     window.set_state = function(state) {
         console.log('setting state');
         curr_state = state;
+
+        memento_links_current = false;
         do_update();
     }
 
@@ -101,8 +104,6 @@ function update_while_loading()
 
 function do_update()
 {
-    add_memento_links();
-
     var cinfo = document.getElementById("capture_info");
     if (cinfo && window.frames[0].wbinfo) {
         cinfo.innerText = _wb_js.ts_to_date(window.frames[0].wbinfo.timestamp, true);
@@ -118,14 +119,13 @@ function do_update()
         timestamp = wbinfo.timestamp;
     }
 
+    add_memento_links(url);
     load_embed_viz(url, timestamp);
 }
 
-var memento_links_added = false;
-
-function add_memento_links()
+function add_memento_links(url)
 {
-    if (memento_links_added) {
+    if (memento_links_current) {
         return;
     }
 
@@ -137,13 +137,20 @@ function add_memento_links()
 
     function add_link(type, name) {
         var memento_ts = window.frames[0].wbinfo["m_" + type];
+        var elem = document.getElementById("m_" + type);
+
+        if (elem) {
+            while (elem.children.length > 0) {
+                elem.removeChild(elem.children[0]);
+            }
+        }
+
         if (!memento_ts || memento_ts == "") {
             return;
         }
 
-        var elem = document.getElementById("m_" + type);
         if (elem) {
-            var full_url = wbinfo.prefix + memento_ts + "/" + wbinfo.capture_url;
+            var full_url = wbinfo.prefix + memento_ts + "/" + window.frames[0].wbinfo.url;
             var link = document.createElement("a");
             link.setAttribute("href", full_url);
             link.innerText = name;
