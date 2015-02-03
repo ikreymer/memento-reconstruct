@@ -135,9 +135,17 @@ class LiveDirectLoader(object):
                 failed_files.append(parts.netloc)
             raise CaptureException('Unsuccessful response, trying another')
 
+        content_type = response.headers.get('content-type')
+        # for now, disable referrer for html to avoid links being treated as part of same page
+        # for frames, must assemble on client side
+        if 'text/html' in content_type:
+            referrer = None
+        else:
+            referrer = wbrequest.referrer
+
         page_key = None
         is_embed = False
-        if wbrequest.referrer and wbrequest.referrer.startswith(wbrequest.wb_prefix):
+        if referrer and wbrequest.referrer.startswith(wbrequest.wb_prefix):
             wb_url = WbUrl(wbrequest.referrer[len(wbrequest.wb_prefix):])
             is_embed = True
         else:

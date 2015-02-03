@@ -64,7 +64,7 @@ _wb_js.create_banner_element = function(banner_id)
     }
 
     var contents = '<div style="display: inline-block">';
-    contents += '<div style="float: left"><b style="margin-left: 8px">' + capture_str + '</b><br/>';
+    contents += '<div style="float: left"><b id="capture_info" style="margin-left: 8px">' + capture_str + '</b><br/>';
     contents += '<p id="timemap"><a href="' + wbinfo.prefix + "*/" + wbinfo.capture_url + '"><b>Timemap</b></a></p>';
     contents += '<p id="m_first"></p>';
     contents += '<p id="m_prev"></p>';
@@ -78,7 +78,13 @@ _wb_js.create_banner_element = function(banner_id)
     banner.innerHTML = contents;
     document.body.insertBefore(banner, document.body.firstChild);
 
-    //document.getElementById("myframe").addEventListener('load', clear_update);
+    //window.frames[0].addEventListener('load', do_update);
+    window.set_state = function(state) {
+        console.log('setting state');
+        curr_state = state;
+        do_update();
+    }
+
 
     return banner_id;
 }
@@ -87,19 +93,32 @@ function update_while_loading()
 {
     if (document.readyState === 'complete') {
         window.clearInterval(updater_id);
+        // don't call do_update, that's called by eventlistener
+    } else {
+        do_update();
     }
+}
 
+function do_update()
+{
     add_memento_links();
+
+    var cinfo = document.getElementById("capture_info");
+    if (cinfo && window.frames[0].wbinfo) {
+        cinfo.innerText = _wb_js.ts_to_date(window.frames[0].wbinfo.timestamp, true);
+    }
 
     var url;
 
     if (curr_state && curr_state.url) {
         url = curr_state.url;
+        timestamp = curr_state.timestamp;
     } else {
         url = wbinfo.capture_url;
+        timestamp = wbinfo.timestamp;
     }
 
-    load_api(url);
+    load_embed_viz(url, timestamp);
 }
 
 var memento_links_added = false;

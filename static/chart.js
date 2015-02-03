@@ -28,11 +28,12 @@ function init_host_chart(memento_list) {
 }
 
 
-function init_scatter(memento_list) {
+function init_scatter(memento_list, curr_memento) {
     nv.addGraph(function() {
       var chart = nv.models.scatterChart()
                     .transitionDuration(350)
-                    .color(d3.scale.category10().range().slice(5));
+                    //.color(d3.scale.category10().range().slice(5));
+                    .color(["#d62728", "#000000"]);
 
       //Configure how the tooltip looks.
       chart.tooltipContent(function(key, x, y, e) {
@@ -43,6 +44,7 @@ function init_scatter(memento_list) {
           label += x
           label += " sec: </b>";
           label += e.point["url"];
+          return label;
       });
 
       //Axis settings
@@ -59,9 +61,10 @@ function init_scatter(memento_list) {
       chart.tooltipYContent(null);
       chart.useVoronoi(false);
 
-      var scatter_data = [{"key": "mementos", "values": memento_list}];
+      var scatter_data = [{"key": "mementos", "values": memento_list},
+                          {"key": "curr", "values": curr_memento}];
 
-      console.log(scatter_data);
+      //console.log(scatter_data);
 
       d3.select('#scatter svg')
           .datum(scatter_data)
@@ -74,9 +77,9 @@ function init_scatter(memento_list) {
 }
 
 
-function load_api(url)
+function load_embed_viz(url, timestamp)
 {
-    var full_url = "/api/" + wbinfo.timestamp + "/" + url;
+    var full_url = "/api/" + timestamp + "/" + url;
 
     d3.json(full_url, function(error, json) {
         if (error) {
@@ -85,6 +88,7 @@ function load_api(url)
         }
 
         var mementos = [];
+        var curr_only = [];
 
         var target_sec = parseInt(json["_target_sec"]);
 
@@ -106,18 +110,24 @@ function load_api(url)
                          "shape": "diamond",
                          "size": 5.0};
 
-            if (sec == 0 && point.url == wbinfo.capture_url) {
+            if (sec == 0 && point.url == url) {
                 point["shape"] = "circle";
                 point["size"] = 60;
                 point["y"] = 0;
+                curr_only = [point];
+            } else {
+                mementos.push(point);
             }
-
-            mementos.push(point);
         }
 
-        if (mementos && mementos.length > 0) {
-            init_host_chart(mementos);
-            init_scatter(mementos);
+        if (curr_only.length > 0 || mementos.length > 0) {
+            init_scatter(mementos, curr_only);
+
+            //combine for host chart
+            if (curr_only.length > 0) {
+                mementos.push(curr_only[0]);
+            }
+            init_host_chart(mementos)
         }
     });
 }
