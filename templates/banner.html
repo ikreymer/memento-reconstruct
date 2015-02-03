@@ -64,7 +64,7 @@ _wb_js.create_banner_element = function(banner_id)
         capture_str = _wb_js.ts_to_date(wbinfo.timestamp, true);
     }
 
-    var contents = '<div style="display: inline-block">';
+    var contents = '<div style="display: inline-block; width: 25%">';
     contents += '<div style="float: left"><b id="capture_info" style="margin-left: 8px">' + capture_str + '</b><br/>';
     contents += '<p id="timemap"><a href="' + wbinfo.prefix + "*/" + wbinfo.capture_url + '"><b>Timemap</b></a></p>';
     contents += '<p id="m_first"></p>';
@@ -73,8 +73,8 @@ _wb_js.create_banner_element = function(banner_id)
     contents += '<p id="m_last"></p>';
     contents += '</div></div>';
 
-    contents += '<div id="hostchart" style="display: inline-block; width: 300px; height: 120px"><svg></svg></div>';
-    contents += '<div id="scatter" style="display: inline-block; width: 600px; height: 120px"><svg></svg></div>';
+    contents += '<div id="hostchart" style="display: inline-block; width: 20%; height: 120px"><svg></svg></div>';
+    contents += '<div id="scatter" style="display: inline-block; width: 53%; height: 120px"><svg></svg></div>';
 
     banner.innerHTML = contents;
     document.body.insertBefore(banner, document.body.firstChild);

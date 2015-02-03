@@ -112,7 +112,7 @@ function load_embed_viz(url, timestamp)
 
             if (sec == 0 && point.url == url) {
                 point["shape"] = "circle";
-                point["size"] = 60;
+                point["size"] = 10;
                 point["y"] = 0;
                 curr_only = [point];
             } else {
