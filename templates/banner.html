@@ -8,160 +8,87 @@
 {% else %}
 
 <script src="/static/m/d3.v3.min.js"> </script>
-<script src="/static/m/nv.d3.min.js"> </script>
-<link href="/static/m/nv.d3.css" rel="stylesheet"/>
+
+<script src="/static/m/c3.min.js"></script>
 
 <script src="/static/m/chart.js"> </script>
 
 <style>
+
 #mt_banner
 {
-    font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif !important;
-    width: 100% !important;
-    font-size: 18px; !important;
-    background-color: lightYellow !important;
-    display: block;
+  font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  width: 100%;
+  background-color: white;
 
-    position: absolute !important;
-    border: 0px;
-    height: 120px !important;
+/*  position: absolute;*/
+  border: 0px;
+  height: 110px !important;
 }
 
-.wb_iframe_div
+.wb_iframe
 {
-   width: 100%;
-   height: 100%;
-   padding: 120px 4px 4px 0px;
-}
-
-#mt_banner p
-{
-    display: inline-block;
- /*   vertical-align: top;*/
-    margin-left: 8px;
+  width: 100%;
+  height: 100%;
+  padding: 0px 0px 0px 0px;
+  border: 0px;
 }
 </style>
 
 <script>
 
 var updater_id = undefined;
-var memento_links_current = false;
-
+  
 _wb_js.create_banner_element = function(banner_id)
 {
-    if (document.readyState !== 'complete') {
-        updater_id = window.setInterval(update_while_loading, 2000);
-    };
-
-    banner_id = "mt_banner";
-    var banner = document.createElement("wb_div");
-    banner.setAttribute("id", banner_id);
-    banner.setAttribute("lang", "en");
-
-    var capture_str = "";
-
-    if (wbinfo && wbinfo.timestamp) {
-        capture_str = _wb_js.ts_to_date(wbinfo.timestamp, true);
+  if (document.readyState !== 'complete') {
+    updater_id = window.setInterval(update_while_loading, 2000);
+  };
+  
+  banner_id = "mt_banner";
+  var banner = document.createElement("div");
+  banner.setAttribute("id", banner_id);
+  banner.setAttribute("lang", "en");
+  //banner.setAttribute("src", "/static/m/banner.html");
+  d3.html("/static/m/banner.html", function(err, html) {
+    if (err) {
+      console.log(error);
     }
-
-    var contents = '<div style="display: inline-block; width: 25%">';
-    contents += '<div style="float: left"><b id="capture_info" style="margin-left: 8px">' + capture_str + '</b><br/>';
-    contents += '<p id="timemap"><a href="' + wbinfo.prefix + "*/" + wbinfo.capture_url + '"><b>Timemap</b></a></p>';
-    contents += '<p id="m_first"></p>';
-    contents += '<p id="m_prev"></p>';
-    contents += '<p id="m_next"></p>';
-    contents += '<p id="m_last"></p>';
-    contents += '</div></div>';
-
-    contents += '<div id="hostchart" style="display: inline-block; width: 20%; height: 120px"><svg></svg></div>';
-    contents += '<div id="scatter" style="display: inline-block; width: 53%; height: 120px"><svg></svg></div>';
-
-    banner.innerHTML = contents;
-    document.body.insertBefore(banner, document.body.firstChild);
-
-    //window.frames[0].addEventListener('load', do_update);
-    window.set_state = function(state) {
-        console.log('setting state');
-        curr_state = state;
-
-        memento_links_current = false;
-        do_update();
-    }
-
-
-    return banner_id;
+    banner.appendChild(html);
+    init_banner();
+  });
+  document.body.insertBefore(banner, document.body.firstChild);
+  
+  window.set_state = function(state) {
+    curr_state = state;
+    do_update();
+  }
+      
+  return banner_id;
 }
 
 function update_while_loading()
 {
-    if (document.readyState === 'complete') {
-        window.clearInterval(updater_id);
-        // don't call do_update, that's called by eventlistener
-    } else {
-        do_update();
-    }
+  if (document.readyState === 'complete') {
+      window.clearInterval(updater_id);
+      // don't call do_update, that's called by eventlistener
+  } else {
+      do_update();
+  }
 }
 
 function do_update()
 {
-    var cinfo = document.getElementById("capture_info");
-    if (cinfo && window.frames[0].wbinfo) {
-        cinfo.innerText = _wb_js.ts_to_date(window.frames[0].wbinfo.timestamp, true);
-    }
-
-    var url;
-
-    if (curr_state && curr_state.url) {
-        url = curr_state.url;
-        timestamp = curr_state.timestamp;
-    } else {
-        url = wbinfo.capture_url;
-        timestamp = wbinfo.timestamp;
-    }
-
-    add_memento_links(url);
-    load_embed_viz(url, timestamp);
-}
-
-function add_memento_links(url)
-{
-    if (memento_links_current) {
-        return;
-    }
-
-    if (!window.frames[0].wbinfo) {
-        return;
-    }
-
-    memento_links_added = true;
-
-    function add_link(type, name) {
-        var memento_ts = window.frames[0].wbinfo["m_" + type];
-        var elem = document.getElementById("m_" + type);
-
-        if (elem) {
-            while (elem.children.length > 0) {
-                elem.removeChild(elem.children[0]);
-            }
-        }
-
-        if (!memento_ts || memento_ts == "") {
-            return;
-        }
-
-        if (elem) {
-            var full_url = wbinfo.prefix + memento_ts + "/" + window.frames[0].wbinfo.url;
-            var link = document.createElement("a");
-            link.setAttribute("href", full_url);
-            link.innerText = name;
-            elem.appendChild(link);
-        }
-    }
-
-    add_link("first", "<< First");
-    add_link("prev", "< Prev");
-    add_link("next", "Next >");
-    add_link("last", "Last >>");
+  var info;
+  
+  if (window.frames[0].wbinfo) {
+    info = window.frames[0].wbinfo;
+  } else {
+    info = {}
+    info.url = curr_state.url;
+    info.timestamp = curr_state.timestamp;
+  }
+  update_banner(info);
 }
 
 </script>
