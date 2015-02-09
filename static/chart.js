@@ -1,3 +1,8 @@
+var chart = undefined;
+var last_unload = undefined;
+var updater_id = undefined;
+
+
 function agg_by_host(data) {
   var res = d3.nest()
   .key(function(d) { return d.host})
@@ -9,36 +14,21 @@ function agg_by_host(data) {
 }
 
 function init_host_chart(memento_list) {
-  
   var agg = agg_by_host(memento_list);
   var cols = [];
+  var unload = [];
+
   for (var i = 0; i < agg.length; i++) {
-    cols.push([agg[i].key + " (" + agg[i].values + ")",
-               agg[i].values]);
+    cols.push([//agg[i].key,
+      agg[i].key + " (" + agg[i].values + ")",
+      agg[i].values]);
   }
-  
-  var chart = c3.generate({
+
+  var chart_json = {
     bindto: '#hostchart',
-    
-    tooltip: {
-//      format: {
-//        value: function (value, ratio, id) { return value; },
-//        name: function (name, ratio, id, index) { return name; },
-//      },
-    },
 
     data: {
-        columns: cols,
-//      columns: [
-//        ['hostA (30)', 30],
-//        ['hostB (120)', 120],
-//        ['web.archive.org (150)', 150],
-//        ['web.archive.org (10)', 10],
-//        ['archive-it (100)', 56],
-//        ['ukblah (55)', 55],
-//        ['abc (123)', 123],
-//      ],
-      
+      columns: cols,
       type : 'pie',
     },
 
@@ -51,142 +41,211 @@ function init_host_chart(memento_list) {
     legend: {
       position: 'right',
     },
-  });
-  
+  };
+
+  chart = c3.generate(chart_json);
   chart.resize({width: 400});
-  d3.select("#hostchart svg").transition().duration(350);
-}
-
-function init_host_chart2(memento_list) {
-    nv.addGraph(function() {
-      var chart = nv.models.pieChart()
-      //var chart = nv.models.discreteBarChart()
-          .x(function(d) { return d.key + " (" + d.values + ")";})
-          .y(function(d) { return d.values })
-          .showLabels(false);
-
-        d3.select("#hostchart svg")
-            .datum(agg_by_host(memento_list))
-            .transition().duration(350)
-            .call(chart);
-
-      nv.utils.windowResize(chart.update);
-
-      return chart;
-    });
 }
 
 
-function init_scatter(memento_list, curr_memento) {
-    nv.addGraph(function() {
-      var chart = nv.models.scatterChart()
-                    .transitionDuration(350)
-                    //.color(d3.scale.category10().range().slice(5));
-                    .color(["#d62728", "#000000"]);
-
-      //Configure how the tooltip looks.
-      chart.tooltipContent(function(key, x, y, e) {
-          var label = "<b>";
-          if (x > 0) {
-              label += "+";
-          }
-          label += x
-          label += " sec: </b>";
-          label += e.point["url"];
-          return label;
-      });
-
-      //Axis settings
-      //chart.xAxis.tickFormat(d3.format('.02f'));
-      //chart.yAxis.tickFormat(d3.format('.02f'));
-
-      //We want to show shapes other than circles.
-      chart.scatter.onlyCircles(false);
-
-      chart.showXAxis(true);
-      chart.showYAxis(false);
-      chart.showLegend(false);
-      //chart.tooltipXContent(null);
-      chart.tooltipYContent(null);
-      chart.useVoronoi(false);
-
-      var scatter_data = [{"key": "mementos", "values": memento_list},
-                          {"key": "curr", "values": curr_memento}];
-
-      //console.log(scatter_data);
-
-      d3.select('#scatter svg')
-          .datum(scatter_data)
-          .call(chart);
-
-      nv.utils.windowResize(chart.update);
-
-      return chart;
-    });
-}
-
-function init_banner()
+function init_scatter(memento_list)
 {
-  console.log("inited");
+  var chart = c3.generate({
+    bindto: "#scatterchart",
+    data: {
+      json: memento_list,
+      // "curr": curr_memento},
+      x: "x",
+      keys: {
+        value: ["y", "x"]
+      },
+      type: 'scatter',
+      xSort: false,
+      color: function(color, d) {
+        if (memento_list[d.index].curr_page) {
+          return "#f00";
+        }
+        return color;
+      }
+    },
+
+    point: {
+      r: 5,
+    },
+    
+    zoom: {
+      enabled: true,
+      extent: [1, 10000],
+    },
+
+    axis: {
+      rotated: false,
+      x: {
+        show: true,
+        tick: {
+          count: 2,
+          //culling: true
+        },
+      },
+      y: {
+        show: false,
+      }
+    },
+
+    tooltip: {
+      format: {
+        //title: function (x) { console.log(x); return undefined; }
+      },
+      contents: function (d, defaultTitleFormat, defaultValueFormat, color) {
+        var url = memento_list[d[0].index].url;
+        var x_str = d[0].x;
+        if (x_str > 0) {
+          x_str = "+" + x_str;
+        }
+        var format = "<div class='c3-tooltip'><table><tr>";
+        format += "<td>" + url + "</td>";
+        format += "<td><b>" + x_str + " sec</b></td>";
+        format += "</table></div>";
+        return format;
+      }
+    },
+
+    legend: {
+      show: false
+    }
+  });
 }
 
+function update_capture_info(timestamp)
+{
+  var elem = document.getElementById("ts_info");
+  if (elem) {
+    elem.innerHTML =  _wb_js.ts_to_date(timestamp, true);
+  }
+}
 
 function update_banner(info)
 {
   var url = info.url;
   var timestamp = info.timestamp;
+
+  if (!url || !timestamp) {
+    return;
+  }
   
+  update_capture_info(info.timestamp);
+
+  function update_mem_link(name)
+  {
+    var val = info["m_" + name];
+    if (!val) {
+      return;
+    }
+    var m_elem = document.getElementById("m_" + name);
+    if (!m_elem) {
+      return;
+    }
+    m_elem.setAttribute("href", wbinfo.prefix + val + "/" + info.url);
+  }
+
+  update_mem_link("first");
+  update_mem_link("prev");
+  update_mem_link("next");
+  update_mem_link("last");
+
   var full_url = "/api/" + timestamp + "/" + url;
 
   d3.json(full_url, function(error, json) {
-      if (error) {
-          console.log(error);
-          return;
+    if (error) {
+      console.log(error);
+      return;
+    }
+
+    var mementos = [];
+
+    var target_sec = parseInt(json["_target_sec"]);
+
+    for (var key in json) {
+      if (key == "_target_sec") {
+        continue;
       }
 
-      var mementos = [];
-      var curr_only = [];
-
-      var target_sec = parseInt(json["_target_sec"]);
-
-      for (var key in json) {
-          if (key == "_target_sec") {
-              continue;
-          }
-
-          var list = key.split(" ");
-          var sec = parseInt(json[key]) - target_sec;
+      var list = key.split(" ");
+      var sec = parseInt(json[key]) - target_sec;
 
 
-          var point = {"host": list[0],
-                       "ts": list[1],
-                       "url": list[2],
+      var point = {"host": list[0],
+                   "ts": list[1],
+                   "url": list[2],
 
-                       "x": sec,
-                       "y": Math.random() * 4.0 - 2.0,
-                       "shape": "diamond",
-                       "size": 5.0};
+                   "x": sec,
+                   "y": Math.random() * 4.0 - 2.0,
+                   "size": 5.0};
 
-          if (sec == 0 && point.url == url) {
-              point["shape"] = "circle";
-              point["size"] = 10;
-              point["y"] = 0;
-              curr_only = [point];
-          } else {
-              mementos.push(point);
-          }
+      if (sec == 0 && point.url == url) {
+        point["curr_page"] = true;
+        point["y"] = 1.0;
       }
+      mementos.push(point);
+    }
 
-      if (curr_only.length > 0 || mementos.length > 0) {
-          //init_scatter(mementos, curr_only);
-
-          //combine for host chart
-          if (curr_only.length > 0) {
-              mementos.push(curr_only[0]);
-          }
-          init_host_chart(mementos);
-      }
+    if (mementos.length > 0) {
+      init_scatter(mementos);
+      init_host_chart(mementos);
+    }
   });
 }
 
+_wb_js.create_banner_element = function(banner_id)
+{
+  if (updater_id) {
+    return;
+  }
+  
+  if (document.readyState !== 'complete') {
+    updater_id = window.setInterval(update_while_loading, 2000);
+  }
+  
+  window.set_state = function(state) {
+    curr_state = state;
+    do_update();
+  }
+}
 
+function update_while_loading()
+{
+  if (document.readyState === 'complete') {
+    window.clearInterval(updater_id);
+    // don't call do_update, that's called by eventlistener
+  } else {
+    do_update();
+  }
+}
+
+function do_update()
+{
+  var info;
+
+  if (window.frames[0].wbinfo) {
+    info = window.frames[0].wbinfo;
+  } else {
+    info = {}
+    info.url = curr_state.url;
+    info.timestamp = curr_state.timestamp;
+  }
+  update_banner(info);
+}
+
+function toggle_banner()
+{
+  var banner = document.getElementById('mt_banner');
+  banner.classList.toggle('closed');
+  
+  var toggle = document.getElementById('banner_toggle');
+  
+  if (banner.classList.contains('closed')) {
+    toggle.innerHTML = "Show";
+  } else {
+    toggle.innerHTML = "X";
+  }
+}

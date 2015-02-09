@@ -3,6 +3,7 @@ import sys
 import calendar
 import datetime
 import itertools
+import urllib
 
 from collections import namedtuple
 
@@ -35,6 +36,7 @@ class MementoJsonApi(object):
         self.session = requests.Session()
 
     def timegate_query(self, timestamp, url):
+        url = urllib.quote(url, ':/')
         full = self.api_endpoint + timestamp + '/' + url
         try:
             r = self.session.get(full)
@@ -47,6 +49,7 @@ class MementoJsonApi(object):
         return result['mementos']
 
     def timemap_query(self, url, closest='1'):
+        url = urllib.quote(url, ':/')
         full = self.timemap_endpoint + closest + '/' + url
         try:
             r = self.session.get(full)

@@ -112,27 +112,37 @@ class LiveDirectLoader(object):
         """
         return url.split('?')[0].endswith('.css')
 
+    def _do_req(self, urls):
+        for url in urls:
+            response = self.session.request(method='GET',
+                                            url=url,
+                                            allow_redirects=False,
+                                            stream=True,
+                                            verify=False)
+
+            if response and response.status_code == 404:
+                response = None
+                continue
+
+            return response
+
+        return response
+
     def __call__(self, cdx, failed_files, cdx_loader, wbrequest):
         src_url = cdx['src_url']
-        src_url = WBURL_RX.sub(r'\1\2id_\4', src_url)
         parts = urlparse.urlsplit(src_url)
         archive_host = parts.netloc
 
         if archive_host in failed_files:
             raise CaptureException('Skipping already failed: ' + archive_host)
 
-        response = self.session.request(method='GET',
-                                    url=src_url,
-                                    #data=data,
-                                    #headers=req_headers,
-                                    allow_redirects=False,
-                                    #proxies=proxies,
-                                    stream=True,
-                                    verify=False)
+        src_url_id = WBURL_RX.sub(r'\1\2id_\4', src_url)
 
-        if response.status_code >= 400:
-            if response.status_code == 403 or response.status_code >= 500:
-                failed_files.append(parts.netloc)
+        response = self._do_req((src_url_id, src_url))
+
+        if not response or response.status_code >= 400:
+            if response and response.status_code == 403 or response.status_code >= 500:
+                failed_files.append(archive_host)
             raise CaptureException('Unsuccessful response, trying another')
 
         content_type = response.headers.get('content-type')
