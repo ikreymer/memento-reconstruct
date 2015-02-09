@@ -145,7 +145,8 @@ class LiveDirectLoader(object):
                 failed_files.append(archive_host)
             raise CaptureException('Unsuccessful response, trying another')
 
-        content_type = response.headers.get('content-type')
+        content_type = response.headers.get('content-type', '')
+        content_type = content_type.split(' ')[0]
         # for now, disable referrer for html to avoid links being treated as part of same page
         # for frames, must assemble on client side
         if 'text/html' in content_type:

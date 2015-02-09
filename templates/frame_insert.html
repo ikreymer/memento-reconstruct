@@ -6,6 +6,9 @@
       wbinfo.prefix = "{{ wbrequest.wb_prefix }}";
       wbinfo.capture_url = "{{ url }}";
       wbinfo.timestamp = "{{ wbrequest.wb_url.timestamp }}";
+      {% if wbrequest.wb_url.timestamp %}
+      wbinfo.seconds = {{ wbrequest.wb_url.timestamp | format_ts('%s') }};
+      {% endif %}
       wbinfo.is_frame = true;
     </script>
 
@@ -19,7 +22,7 @@
     <link href="/static/m/tt.css" rel="stylesheet" type="text/css">
 
     <script src="/static/m/moment.min.js"></script>
-    
+
     <script src="/static/m/chart.js"></script>
 
     <script src='{{ wbrequest.host_prefix }}/{{ static_path }}/wb_frame.js'></script>
@@ -30,7 +33,7 @@
         <p>
           <a id="m_first" href="">&lt;&lt;</a>&nbsp;
           <a id="m_prev" href="">&lt;</a>&nbsp;
-          <a title="Powered By Memento and pywb" href="http://mementoweb.org/about/"><img src="/static/m/memento_logo.svg" class="icon"/></a>&nbsp;
+          <a title="Powered By Memento and pywb" href="http://mementoweb.org/about/"><img id="icon" src="/static/m/memento_logo.svg" class="icon rotate"/></a>&nbsp;
           <a id="m_next" href="">&gt;</a>&nbsp;
           <a id="m_last" href="">&gt;&gt;</a>
         </p>
@@ -39,7 +42,7 @@
       <div id="hostchart" class="host-chart"></div>
       <div id="scatterchart" class="scatter-chart"></div>
       <script>
-        update_capture_info(wbinfo.timestamp);
+        update_capture_info(wbinfo.seconds);
         init_moment_js();
       </script>
     </div>
