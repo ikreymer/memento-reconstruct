@@ -118,9 +118,12 @@ function init_scatter(mem_data)
           type: 'timeseries',
           show: true,
           tick: {
-            format: '%Y-%m-%d %H:%M:%S',
+            //format: '%Y-%m-%d %H:%M:%S',
+            format: '%Y-%m-%d',
             fit: false,
             count: 3,
+            //multiline: true,
+            //width: 50,
             //culling: true,
             //multiline: true,
           },
@@ -242,23 +245,30 @@ function update_banner(info)
 
   update_capture_info(info.seconds);
 
-  function update_mem_link(name)
+  function update_mem_link(name, backup_name)
   {
-    var val = info["m_" + name];
-    if (!val) {
-      return;
-    }
     var m_elem = document.getElementById("m_" + name);
     if (!m_elem) {
       return;
     }
+    var val = info["m_" + name];
+    
+    if (!val && backup_name) {
+      val = info["m_" + backup_name];
+    }
+    
+    if (!val) {
+      m_elem.classList.add("hidden");      
+    } else {
+      m_elem.classList.remove("hidden");
+    }
     m_elem.setAttribute("href", wbinfo.prefix + val + "/" + info.url);
   }
 
-  update_mem_link("first");
-  update_mem_link("prev");
-  update_mem_link("next");
-  update_mem_link("last");
+  update_mem_link("first", "prev");
+  update_mem_link("prev", "first");
+  update_mem_link("next", "last");
+  update_mem_link("last", "next");
 
   var full_url = "/api/" + timestamp + "/" + url;
 
@@ -285,7 +295,7 @@ function update_banner(info)
     var hasPoints = false;
 
     for (var key in json) {
-      if (key == "_target_sec") {
+      if (key.length > 0 && key[0] == "_") {
         continue;
       }
 

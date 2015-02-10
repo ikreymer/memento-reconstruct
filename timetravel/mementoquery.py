@@ -7,7 +7,6 @@ import urllib
 
 from collections import namedtuple
 
-from pywb.cdx.cdxobject import CDXObject
 from pywb.utils.canonicalize import canonicalize
 from pywb.utils.timeutils import iso_date_to_datetime, datetime_to_timestamp
 from pywb.utils.timeutils import timestamp_to_sec
@@ -15,6 +14,8 @@ from pywb.utils.wbexception import AccessException, NotFoundException
 
 import logging
 from urlparse import urlsplit
+
+from redis_client import redis_client
 
 
 EXCLUDE_LIST = ('http://archive.today/')
@@ -179,8 +180,16 @@ class MementoIndexServer(object):
             if not closest:
                 closest = str(datetime.date.today().year)
 
+
+            mem_iter = redis_client.load_cdx_cache_iter(params['url'], closest)
+            if mem_iter:
+                return mem_iter
+
             mem_iter = MementoClosestQuery(self.loader, params['url'], closest)
+            
             skip_exclude=True
+            timegate = True
+        
         else:
             closest = params.get('query_closest')
             try:
@@ -193,7 +202,9 @@ class MementoIndexServer(object):
                 closest = '1'
 
             mem_iter = MementoTimemapQuery(self.loader, params['url'], closest)
+            
             skip_exclude=False
+            timegate = False
 
         limit = int(params.get('limit', 10))
 
@@ -201,6 +212,10 @@ class MementoIndexServer(object):
                                        mem_iter,
                                        limit,
                                        skip_exclude)
+
+        if timegate:
+            mem_iter = redis_client.save_cdx_cache_iter(mem_iter, params['url'], closest)
+        
         return mem_iter
 
     def memento_to_cdx(self, url, mem_iter, limit, skip_exclude=True):
@@ -220,13 +235,14 @@ class MementoIndexServer(object):
                 else:
                     excluded = True
 
-            cdx = CDXObject()
+            mem_url = mem.url.encode('utf-8')
+            cdx = {}
             cdx['urlkey'] = key
             cdx['timestamp'] = mem.ts
             cdx['original'] = url
-            cdx['src_url'] = mem.url
+            cdx['src_url'] = mem_url
             cdx['sec'] = mem.sec
-            cdx['src_host'] = urlsplit(mem.url).netloc
+            cdx['src_host'] = urlsplit(mem_url).netloc
             cdx['excluded'] = excluded
 
             if len(mems) > 1:

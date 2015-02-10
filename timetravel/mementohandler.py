@@ -1,7 +1,6 @@
 from pywb.webapp.handlers import WBHandler
 from pywb.utils.statusandheaders import StatusAndHeaders
 from pywb.webapp.replay_views import ReplayView, CaptureException
-from pywb.utils.canonicalize import canonicalize
 
 
 from pywb.rewrite.wburl import WbUrl
@@ -10,6 +9,8 @@ from pywb.rewrite.url_rewriter import UrlRewriter
 from pywb.framework.basehandlers import WbUrlHandler
 from pywb.framework.wbrequestresponse import WbResponse
 
+from redis_client import redis_client
+
 import requests
 import logging
 import re
@@ -17,56 +18,20 @@ import json
 import os
 
 import urlparse
-import redis
-
 
 #=============================================================================
 WBURL_RX = re.compile('(.*/)([0-9]{1,14})(\w{2}_)?(/https?://.*)')
-
-redis_cli = None
-
-#=============================================================================
-def init_redis(config):
-    global redis_cli
-    if redis_cli:
-        return redis_cli
-
-    redis_url = os.environ.get('REDISCLOUD_URL')
-    if not redis_url:
-        redis_url = config.get('redis_url')
-
-    if redis_url:
-        redis_cli = redis.StrictRedis.from_url(redis_url)
-    else:
-        redis_cli = redis.StrictRedis()
-
-    return redis_cli
-
-
-#=============================================================================
-def get_url_key(wburl):
-    return get_url_key_p(wburl.timestamp, wburl.url)
-
-
-def get_url_key_p(ts, url):
-    return ts + '/' + canonicalize(url, False)
 
 
 #=============================================================================
 class APIHandler(WbUrlHandler):
     def __init__(self, config):
-        self.redis = init_redis(config)
+        pass
 
     def __call__(self, wbrequest):
-        res = {}
-
         wb_url = wbrequest.wb_url
-        page_key = get_url_key(wb_url)
 
-        try:
-            res = self.redis.hgetall('u:' + page_key)
-        except Exception as e:
-            logging.debug(e)
+        res = redis_client.get_all_embeds(wb_url)
 
         return WbResponse.text_response(json.dumps(res),
                                         content_type='application/json')
@@ -75,7 +40,7 @@ class APIHandler(WbUrlHandler):
 #=============================================================================
 class MementoHandler(WBHandler):
     def _init_replay_view(self, config):
-        return ReplayView(LiveDirectLoader(config), config)
+        return RedirectTrackReplayView(LiveDirectLoader(config), config)
 
     def handle_query(self, wbrequest, cdx_lines, output):
         try:
@@ -101,10 +66,29 @@ class MementoHandler(WBHandler):
 
 
 #=============================================================================
+class RedirectTrackReplayView(ReplayView):
+    def _redirect_if_needed(self, wbrequest, cdx):
+        res = super(RedirectTrackReplayView, self)._redirect_if_needed(wbrequest, cdx)
+        if res:
+            loc = res.status_headers.get_header('Location')
+            if loc and loc.startswith(wbrequest.wb_prefix):
+                loc = loc[len(wbrequest.wb_prefix):]
+                loc_url = WbUrl(loc)
+
+                page_key = redis_client.get_url_key(wbrequest.wb_url)
+                redis_client.set_refer_link(loc_url.timestamp,
+                                            loc_url.url,
+                                            page_key)
+
+        return res
+
+
+#=============================================================================
 class LiveDirectLoader(object):
     def __init__(self, config):
         self.session = requests.Session()
-        self.redis = init_redis(config)
+        # init redis here only
+        redis_client.init_redis(config)
 
     def is_embed_ref(self, url):
         """ Is this url an embedded referrer
@@ -145,7 +129,7 @@ class LiveDirectLoader(object):
                 failed_files.append(archive_host)
             raise CaptureException('Unsuccessful response, trying another')
 
-        content_type = response.headers.get('content-type', '')
+        content_type = response.headers.get('content-type', 'unknown')
         content_type = content_type.split(' ')[0]
         # for now, disable referrer for html to avoid links being treated as part of same page
         # for frames, must assemble on client side
@@ -162,34 +146,37 @@ class LiveDirectLoader(object):
         else:
             wb_url = wbrequest.wb_url
 
-        page_key = get_url_key(wb_url)
+        page_key = redis_client.get_url_key(wb_url)
 
         if is_embed and self.is_embed_ref(wb_url.url):
-            orig_ref = self.redis.get('r:' + page_key)
+            orig_ref = redis_client.get_orig_from_link(page_key)
             if orig_ref:
                 wb_url = WbUrl(orig_ref)
-                page_key = get_url_key(wb_url)
+                page_key = redis_client.get_url_key(wb_url)
 
         elif is_embed and self.is_embed_ref(cdx['original']):
-            self.redis.setex('r:' + get_url_key_p(cdx['timestamp'], cdx['original']), 180, page_key)
+            redis_client.set_refer_link(cdx['timestamp'],
+                                        cdx['original'],
+                                        page_key)
 
         parts = urlparse.urlsplit(src_url)
-
-        full_key = 'u:' + page_key
 
         # top page
         if not is_embed or (wbrequest.wb_url.url == wb_url.url and
                             wbrequest.wb_url.timestamp == wb_url.timestamp):
-            target_sec = cdx['sec']
-            self.redis.hset(full_key, '_target_sec', target_sec)
+            redis_client.set_embed_entry(page_key, '_target_secs', str(cdx['sec']))
+            orig_ref = redis_client.get_orig_from_link(page_key)
+            if orig_ref:
+                orig_ts = orig_ref.split('/', 1)[0]
+                redis_client.set_embed_entry(page_key, '_request_ts', orig_ts)
 
         value = (parts.netloc + ' ' +
                  wbrequest.wb_url.timestamp + ' ' +
                  wbrequest.wb_url.url)
 
-        self.redis.hset(full_key, value, cdx['sec'])
-        self.redis.expire(full_key, 180)
+        redis_client.set_embed_entry(page_key, value, str(cdx['sec']) + ' ' + content_type)
 
+        
         statusline = str(response.status_code) + ' ' + response.reason
 
         headers = response.headers.items()

@@ -32,7 +32,7 @@ error_html: ./templates/error.html
 
 frame_insert_html: ./templates/frame_insert.html
 
-redirect_to_exact: false
+redir_to_exact: true
 
 framed_replay: true
 
