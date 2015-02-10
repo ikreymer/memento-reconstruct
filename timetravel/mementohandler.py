@@ -2,9 +2,9 @@ from pywb.webapp.handlers import WBHandler
 from pywb.utils.statusandheaders import StatusAndHeaders
 from pywb.webapp.replay_views import ReplayView, CaptureException
 
-
 from pywb.rewrite.wburl import WbUrl
 from pywb.rewrite.url_rewriter import UrlRewriter
+from pywb.utils.wbexception import AccessException, NotFoundException
 
 from pywb.framework.basehandlers import WbUrlHandler
 from pywb.framework.wbrequestresponse import WbResponse
@@ -21,6 +21,9 @@ import urlparse
 
 #=============================================================================
 WBURL_RX = re.compile('(.*/)([0-9]{1,14})(\w{2}_)?(/https?://.*)')
+
+H_TARGET_SEC = '_target_sec'
+H_REQUEST_TS = '_request_ts'
 
 
 #=============================================================================
@@ -64,6 +67,12 @@ class MementoHandler(WBHandler):
                                                    offset=offset,
                                                    cdx_json=cdx_json)
 
+    def handle_request(self, wbrequest):
+        try:
+            return super(MementoHandler, self).handle_request(wbrequest)
+        except NotFoundException as nfe:
+
+            return self.handle_not_found(wbrequest, nfe)
 
 #=============================================================================
 class RedirectTrackReplayView(ReplayView):
@@ -164,11 +173,11 @@ class LiveDirectLoader(object):
         # top page
         if not is_embed or (wbrequest.wb_url.url == wb_url.url and
                             wbrequest.wb_url.timestamp == wb_url.timestamp):
-            redis_client.set_embed_entry(page_key, '_target_secs', str(cdx['sec']))
+            redis_client.set_embed_entry(page_key, H_TARGET_SEC, str(cdx['sec']))
             orig_ref = redis_client.get_orig_from_link(page_key)
             if orig_ref:
                 orig_ts = orig_ref.split('/', 1)[0]
-                redis_client.set_embed_entry(page_key, '_request_ts', orig_ts)
+                redis_client.set_embed_entry(page_key, H_REQUEST_TS, orig_ts)
 
         value = (parts.netloc + ' ' +
                  wbrequest.wb_url.timestamp + ' ' +

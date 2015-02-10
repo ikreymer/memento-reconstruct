@@ -8,18 +8,11 @@ var curr_ts_sec;
 var curr_ts_date;
 
 var memento_dict;
-var last_json = undefined;
 
+var last_url = undefined;
+var last_timestamp = undefined;
+var last_mem_length = 0;
 
-//function agg_by_host(data) {
-//  var res = d3.nest()
-//  .key(function(d) { return d.host})
-//  .sortKeys(d3.ascending)
-//  .rollup(function(d) { return d.length; })
-//  .entries(data);
-//
-//  return res;
-//}
 
 function init_host_chart(memento_dict) {
   var names = {};
@@ -239,36 +232,42 @@ function update_banner(info)
     return;
   }
   
-  if (!info.seconds) {
-    info.seconds = ts_to_date(info.timestamp).getTime() / 1000;
-  }
-
-  update_capture_info(info.seconds);
-
-  function update_mem_link(name, backup_name)
-  {
-    var m_elem = document.getElementById("m_" + name);
-    if (!m_elem) {
-      return;
+  if (last_url != url || last_timestamp != timestamp) {
+    if (!info.seconds) {
+      info.seconds = ts_to_date(info.timestamp).getTime() / 1000;
     }
-    var val = info["m_" + name];
+
+    update_capture_info(info.seconds);
+
+    function update_mem_link(name, backup_name)
+    {
+      var m_elem = document.getElementById("m_" + name);
+      if (!m_elem) {
+        return;
+      }
+      var val = info["m_" + name];
+
+      if (!val && backup_name) {
+        val = info["m_" + backup_name];
+      }
+
+      if (!val) {
+        m_elem.classList.add("hidden");      
+      } else {
+        m_elem.classList.remove("hidden");
+      }
+      m_elem.setAttribute("href", wbinfo.prefix + val + "/" + info.url);
+    }
+
+    update_mem_link("first", "prev");
+    update_mem_link("prev", "first");
+    update_mem_link("next", "last");
+    update_mem_link("last", "next");
     
-    if (!val && backup_name) {
-      val = info["m_" + backup_name];
-    }
-    
-    if (!val) {
-      m_elem.classList.add("hidden");      
-    } else {
-      m_elem.classList.remove("hidden");
-    }
-    m_elem.setAttribute("href", wbinfo.prefix + val + "/" + info.url);
+    last_url = url;
+    last_timestamp = timestamp;
+    last_mem_length = 0;
   }
-
-  update_mem_link("first", "prev");
-  update_mem_link("prev", "first");
-  update_mem_link("next", "last");
-  update_mem_link("last", "next");
 
   var full_url = "/api/" + timestamp + "/" + url;
 
@@ -278,12 +277,11 @@ function update_banner(info)
       return;
     }
     
-    if (json == last_json) {
-      console.log("same");
+    if (json.length == last_mem_length) {
       return;
     }
     
-    last_json = json;
+    last_mem_length = json.length;
     
     var mem_plot = {};
     var mem_xs = {};
@@ -354,6 +352,27 @@ _wb_js.create_banner_element = function(banner_id)
   window.set_state = function(state) {
     curr_state = state;
     do_update();
+    
+    if (window.frames[0].document && 
+        window.frames[0].document.readyState === 'complete') {
+      stop_anim();
+    }
+  }
+}
+
+function stop_anim()
+{
+  var elem = document.getElementById("icon");
+  if (elem) {
+    elem.classList.remove("rotate");
+  }
+}
+
+function start_anim()
+{
+  var elem = document.getElementById("icon");
+  if (elem) {
+    elem.classList.add("rotate");
   }
 }
 
@@ -361,11 +380,7 @@ function update_while_loading()
 {
   if (document.readyState === 'complete') {
     window.clearInterval(updater_id);
-    var elem = document.getElementById("icon");
-    if (elem) {
-      elem.classList.remove("rotate");
-    }
-    
+    stop_anim();
     // don't call do_update, that's called by eventlistener
   } else {
     do_update();
@@ -383,6 +398,7 @@ function do_update()
     info.url = curr_state.url;
     info.timestamp = curr_state.timestamp;
   }
+  
   update_banner(info);
 }
 
@@ -398,4 +414,9 @@ function toggle_banner()
   } else {
     toggle.innerHTML = "X";
   }
+}
+
+function iframe_unloaded()
+{
+  start_anim();
 }

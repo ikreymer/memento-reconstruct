@@ -43,8 +43,10 @@ class MementoJsonApi(object):
             r = self.session.get(full)
             result = r.json()
         except Exception as e:
+            #if r.status_code == 404:
+            #    return {}
             logging.debug(e)
-            msg = 'No Mementos Currently Available'
+            msg = 'No Mementos Found'
             raise NotFoundException(msg, url=url)
 
         return result['mementos']
@@ -127,11 +129,16 @@ class MementoClosestQuery(object):
         mementos = self.api_loader.timegate_query(self.target_timestamp, self.url)
 
         self.m_closest = self._get_mem_info(mementos, 'closest')
-        self.m_next = self._get_mem_info(mementos, 'next', self.m_closest.ts)
-        self.m_prev = self._get_mem_info(mementos, 'prev', self.m_closest.ts)
 
-        self.m_last = self._get_mem_info(mementos, 'last', self.m_closest.ts)
-        self.m_first = self._get_mem_info(mementos, 'first', self.m_closest.ts)
+        closest_ts = None
+        if self.m_closest:
+            closest_ts = self.m_closest.ts
+
+        self.m_next = self._get_mem_info(mementos, 'next', closest_ts)
+        self.m_prev = self._get_mem_info(mementos, 'prev', closest_ts)
+
+        self.m_last = self._get_mem_info(mementos, 'last', closest_ts)
+        self.m_first = self._get_mem_info(mementos, 'first', closest_ts)
 
         return self
 
@@ -262,12 +269,12 @@ def test_memento_to_cdx(url, mem):
 def main():
     server = MementoIndexServer(['http://timetravel.mementoweb.org/api/json/',
                                  'http://timetravel.mementoweb.org/timemap/json/'])
+    redis_client.init_redis()
 
     cdx_iter = server.load_cdx(closest=sys.argv[1],
                                url=sys.argv[2],
                                sort='closest',
                                limit=int(sys.argv[3]))
-
     sec = None
     for cdx in cdx_iter:
         if not sec:

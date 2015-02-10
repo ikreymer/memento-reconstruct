@@ -1,11 +1,25 @@
-<h2>TimeTravel Singularity</h2>
-<b>{{ err_msg }}</b>
+<html>
+  <head>
+    <style>
+      body {
+        font-family: sans-serif;
+      }
+    </style>  
+  </head>
+  <body>
+    <img src="/static/m/memento_logo.svg" style="vertical-align: middle; width: 50px; height: 50px"/>
+    <h2 style="display: inline-block">TimeTravel Singularity</h2>
+    <p>
+      <b>{{ err_msg }}</b>
+    </p>
 
-{% if err_details %}
-<p>Error Details:</p>
-<p>
-<pre>
-{{ err_details }}
-</pre>
-</p>
-{% endif %}
+    {% if err_details %}
+    <p>Error Details:</p>
+    <p>
+    <pre>
+    {{ err_details }}
+    </pre>
+    </p>
+  {% endif %}
+  </body>
+</html>

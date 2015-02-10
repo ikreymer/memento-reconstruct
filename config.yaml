@@ -30,13 +30,13 @@ banner_html: ./templates/banner.html
 
 error_html: ./templates/error.html
 
+not_found_html: ./templates/not_found.html
+
 frame_insert_html: ./templates/frame_insert.html
 
 redir_to_exact: true
 
 framed_replay: true
-
-#enable_http_proxy: true
 
 enable_cdx_api: true
 
