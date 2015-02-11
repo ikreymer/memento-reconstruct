@@ -31,6 +31,8 @@ function init_host_chart(memento_dict) {
     columns: cols,
     names: names,
     
+    colors: {"MISSING": "#ff0000"},
+    
     type: 'pie'
   };
   
@@ -277,11 +279,13 @@ function update_banner(info)
       return;
     }
     
-    if (json.length == last_mem_length) {
+    var mem_length = Object.keys(json).length;
+    
+    if (mem_length == last_mem_length) {
       return;
     }
     
-    last_mem_length = json.length;
+    last_mem_length = mem_length;
     
     var mem_plot = {};
     var mem_xs = {};
@@ -306,13 +310,22 @@ function update_banner(info)
       var ts = list[1];
       var mem_url = list[2];
       
-      if (!mem_plot[host]) {
-        mem_plot[host] = [];
-        mem_xs[host] = host + "_x";
-        mem_plot[host + "_x"] = [];
+      if (!mem_urls[host]) {
+        if (host != "MISSING") {
+          mem_plot[host] = [];
+          mem_plot[host + "_x"] = [];
+          mem_xs[host] = host + "_x";
+        }
         mem_urls[host] = [];
         hasPoints = true;
       }
+      
+      mem_urls[host].push(mem_url);
+      
+      if (host == "MISSING") {
+        continue;
+      }
+      
       var cdate = new Date(sec * 1000);
       var y = Math.random() * 4.0 - 2.0;
 
@@ -323,7 +336,6 @@ function update_banner(info)
       
       mem_plot[host + "_x"].push(cdate);
       mem_plot[host].push(y);
-      mem_urls[host].push(mem_url);
     }
     
     var mem_data = {

@@ -71,6 +71,16 @@ class MementoHandler(WBHandler):
         try:
             return super(MementoHandler, self).handle_request(wbrequest)
         except NotFoundException as nfe:
+            if wbrequest.referrer and wbrequest.referrer.startswith(wbrequest.wb_prefix):
+                wb_url = WbUrl(wbrequest.referrer[len(wbrequest.wb_prefix):])
+                page_key = redis_client.get_url_key(wb_url)
+
+                value = ('MISSING ' +
+                          wbrequest.wb_url.timestamp + ' ' +
+                          wbrequest.wb_url.url)
+
+                redis_client.set_embed_entry(page_key, value, '0')
+
 
             return self.handle_not_found(wbrequest, nfe)
 
@@ -113,7 +123,9 @@ class LiveDirectLoader(object):
                                             stream=True,
                                             verify=False)
 
-            if response and response.status_code == 404:
+            if (response and 
+                response.status_code >= 400 and
+                not response.headers.get('memento-datetime')):
                 response = None
                 continue
 
@@ -133,8 +145,15 @@ class LiveDirectLoader(object):
 
         response = self._do_req((src_url_id, src_url))
 
-        if not response or response.status_code >= 400:
-            if response and response.status_code == 403 or response.status_code >= 500:
+        if response is None:
+            failed_files.append(archive_host)
+            raise CaptureException('Unsuccessful response, trying another')
+
+        mem_date_time = response.headers.get('memento-datetime', 'mem')
+        print(mem_date_time)
+
+        if (response.status_code >= 400 and not mem_date_time):
+            if response.status_code == 403 or response.status_code >= 500:
                 failed_files.append(archive_host)
             raise CaptureException('Unsuccessful response, trying another')
 
