@@ -24,6 +24,7 @@ collections:
         wb_handler_class: !!python/name:timetravel.mementohandler.APIHandler
 
 
+
 query_html: ./templates/query.html
 
 banner_html: ./templates/banner.html
@@ -41,4 +42,6 @@ framed_replay: true
 enable_cdx_api: true
 
 enable_memento: true
+
+urlrewriter_class: !!python/name:timetravel.mementohandler.ReUrlRewriter
 

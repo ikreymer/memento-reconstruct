@@ -14,12 +14,31 @@ var last_timestamp = undefined;
 var last_mem_length = 0;
 
 
+function cdx_json_to_host_agg(cdx_json) {
+  var urls = {};
+  
+  for (var i = 0; i < cdx_json.length; i++) {
+    var host = cdx_json[i].host;
+    if (urls[host] != undefined) {
+      urls[host]++;
+    } else {
+      urls[host] = 0;
+    }
+  }
+  return {urls: urls};
+}
+
 function init_host_chart(memento_dict) {
   var names = {};
   var cols = [];
+  var len = 0;
 
   for (host in memento_dict.urls) {
-    var len = memento_dict.urls[host].length;
+    if (typeof(memento_dict.urls[host]) === "number") {
+      len = memento_dict.urls[host]
+    } else {
+      len = memento_dict.urls[host].length;
+    }
     cols.push([host, len]);
     names[host] = host + " (" + len + ")";
   }
@@ -282,7 +301,7 @@ function load_all(include_frames)
     var url = frame_list[i].replace("/replay/", "/api/");
     d3.json(url, function(error, json) {
       counter++;
-      
+
       if (!all_mems) {
         all_mems = json;
       } else {
@@ -390,23 +409,25 @@ function update_charts(json) {
   }
 }
 
-_wb_js.create_banner_element = function(banner_id)
-{
-  if (updater_id) {
-    return;
-  }
+if (window._wb_js) {
+  _wb_js.create_banner_element = function(banner_id)
+  {
+    if (updater_id) {
+      return;
+    }
 
-  if (document.readyState !== 'complete') {
-    updater_id = window.setInterval(update_while_loading, 2000);
-  }
+    if (document.readyState !== 'complete') {
+      updater_id = window.setInterval(update_while_loading, 2000);
+    }
 
-  window.set_state = function(state) {
-    curr_state = state;
-    do_update(true);
+    window.set_state = function(state) {
+      curr_state = state;
+      do_update(true);
 
-    if (window.frames[0].document && 
-        window.frames[0].document.readyState === 'complete') {
-      stop_anim();
+      if (window.frames[0].document && 
+          window.frames[0].document.readyState === 'complete') {
+        stop_anim();
+      }
     }
   }
 }

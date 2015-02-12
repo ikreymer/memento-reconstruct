@@ -123,7 +123,7 @@ class LiveDirectLoader(object):
                                             stream=True,
                                             verify=False)
 
-            if (response and 
+            if ((response is not None) and 
                 response.status_code >= 400 and
                 not response.headers.get('memento-datetime')):
                 response = None
@@ -150,7 +150,6 @@ class LiveDirectLoader(object):
             raise CaptureException('Unsuccessful response, trying another')
 
         mem_date_time = response.headers.get('memento-datetime', 'mem')
-        print(mem_date_time)
 
         if (response.status_code >= 400 and not mem_date_time):
             if response.status_code == 403 or response.status_code >= 500:
@@ -213,20 +212,23 @@ class LiveDirectLoader(object):
 
         status_headers = StatusAndHeaders(statusline, headers)
 
-        type_ = type(UrlRewriter.rewrite)
-        wbrequest.urlrewriter._orig_rewrite = wbrequest.urlrewriter.rewrite
-        wbrequest.urlrewriter.rewrite = type_(rewrite_archive, wbrequest.urlrewriter, UrlRewriter)
+        #type_ = type(UrlRewriter.rewrite)
+        #wbrequest.urlrewriter._orig_rewrite = wbrequest.urlrewriter.rewrite
+        #wbrequest.urlrewriter.rewrite = type_(rewrite_archive, wbrequest.urlrewriter, UrlRewriter)
 
         return (status_headers, stream)
 
 
 #=============================================================================
-def rewrite_archive(self, url, mod=None):
-    m = WBURL_RX.match(url)
-    if m:
-        print('REWRITE ARC: ' + url)
-        if not mod:
-            mod = ''
-        return self.prefix + m.group(2) + mod + m.group(4)
-    else:
-        return self._orig_rewrite(url, mod)
+class ReUrlRewriter(UrlRewriter):
+    def rewrite(self, url, mod=None):
+        m = WBURL_RX.match(url)
+        if m:
+            if not mod:
+                mod = ''
+            return self.prefix + m.group(2) + mod + m.group(4)
+        else:
+            return super(ReUrlRewriter, self).rewrite(url, mod)
+
+    def _create_rebased_rewriter(self, new_wburl, prefix):
+        return ReUrlRewriter(new_wburl, prefix)
