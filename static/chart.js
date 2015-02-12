@@ -17,25 +17,25 @@ var last_mem_length = 0;
 function init_host_chart(memento_dict) {
   var names = {};
   var cols = [];
-  
+
   for (host in memento_dict.urls) {
     var len = memento_dict.urls[host].length;
     cols.push([host, len]);
     names[host] = host + " (" + len + ")";
   }
-  
-//  console.log(JSON.stringify(cols));
-//  console.log(JSON.stringify(names));
-  
+
+  //  console.log(JSON.stringify(cols));
+  //  console.log(JSON.stringify(names));
+
   var data = {
     columns: cols,
     names: names,
-    
+
     colors: {"MISSING": "#ff0000"},
-    
+
     type: 'pie'
   };
-  
+
   host_chart = undefined;
 
   if (!host_chart) {
@@ -47,7 +47,7 @@ function init_host_chart(memento_dict) {
       transition: {
         duration: 0
       },
-      
+
       pie: {
         label: {
           show: false,
@@ -71,7 +71,7 @@ function init_host_chart(memento_dict) {
 function init_scatter(mem_data)
 {
   memento_dict = mem_data;
-  
+
   var data = {
     json: memento_dict.plot,
     xs: memento_dict.xs,
@@ -86,14 +86,14 @@ function init_scatter(mem_data)
       return color;
     }
   };
-  
+
   scatter_chart = undefined;
 
   if (!scatter_chart) {
     scatter_chart = c3.generate({
       bindto: "#scatterchart",
       data: data,
-      
+
       transition: {
         duration: 0
       },
@@ -114,9 +114,9 @@ function init_scatter(mem_data)
           show: true,
           tick: {
             //format: '%Y-%m-%d %H:%M:%S',
-            format: '%Y-%m-%d',
-            fit: false,
-            count: 3,
+            format: function (date) { return moment(date).from(curr_ts_moment); },
+            fit: true,
+            //count: 3,
             //multiline: true,
             //width: 50,
             //culling: true,
@@ -125,13 +125,21 @@ function init_scatter(mem_data)
         },
         y: {
           show: false,
-//          padding: {
-//            left: 10,
-//            right: 10,
-//          }
+        },
+      },
+
+      grid: {
+        x: {
+          //show: true,
+          lines: [
+            {
+              value: curr_ts_date,
+              text: "Base Page",
+            }
+          ]
         }
       },
-      
+
       tooltip: {
         grouped: true,
         format: {
@@ -142,7 +150,7 @@ function init_scatter(mem_data)
               return moment(date).from(curr_ts_moment);
             }
           },
-          
+
           value: function (value, ratio, id, index) {
             if (memento_dict && memento_dict.urls && 
                 memento_dict.urls[id] && (index < memento_dict.urls[id].length)) {
@@ -152,34 +160,11 @@ function init_scatter(mem_data)
           }
         }
       },
-            
-
-//      tooltip: {
-//        contents: function (d, defaultTitleFormat, defaultValueFormat, color) {
-//          if (typeof(d[0]) !== "object" || !memento_dict || !memento_dict.urls) {
-//            return '';
-//          }
-//          
-//          var urllist = memento_dict.urls[d[0].id];
-//          if (!urllist) {
-//            return '';
-//          }
-//          
-//          var url = urllist[d[0].index];
-//          var agostr = moment.unix(curr_ts_sec + d[0].x).from(curr_ts_moment);
-//          
-//          var format = "<div class='c3-tooltip'><table><tr>";
-//          format += "<td>" + url + "</td>";
-//          format += "<td><b>" + agostr + "</b></td>";
-//          format += "</table></div>";
-//          return format;
-//        }
- //     },
 
       legend: {
         show: false,
       }
-      
+
     });
   } else {
     data.unload = true;
@@ -217,7 +202,7 @@ function update_capture_info(secs)
   if (!secs) {
     return;
   }
-  
+
   var elem = document.getElementById("ts_info");
   if (elem) {
     //elem.innerHTML = ts_to_date(timestamp).toUTCString();
@@ -225,7 +210,7 @@ function update_capture_info(secs)
   }
 }
 
-function update_banner(info)
+function update_banner(info, include_frames)
 {
   var url = info.url;
   var timestamp = info.timestamp;
@@ -233,7 +218,7 @@ function update_banner(info)
   if (!url || !timestamp) {
     return;
   }
-  
+
   if (last_url != url || last_timestamp != timestamp) {
     if (!info.seconds) {
       info.seconds = ts_to_date(info.timestamp).getTime() / 1000;
@@ -265,90 +250,144 @@ function update_banner(info)
     update_mem_link("prev", "first");
     update_mem_link("next", "last");
     update_mem_link("last", "next");
-    
+
     last_url = url;
     last_timestamp = timestamp;
     last_mem_length = 0;
   }
 
-  var full_url = "/api/" + timestamp + "/" + url;
+  load_all(include_frames);
+}
 
-  d3.json(full_url, function(error, json) {
-    if (error) {
-      console.log(error);
-      return;
-    }
-    
-    var mem_length = Object.keys(json).length;
-    
-    if (mem_length == last_mem_length) {
-      return;
-    }
-    
-    last_mem_length = mem_length;
-    
-    var mem_plot = {};
-    var mem_xs = {};
-    var mem_urls = {};
+function load_all(include_frames)
+{
+  // make list of all frames
+  var frame_list = [];
 
-    curr_ts_sec = parseInt(json["_target_sec"]);
-    curr_ts_moment = moment.unix(curr_ts_sec);
-    
-    var hasPoints = false;
+  if (include_frames) {
+    walk_frames(window.frames[0], frame_list);
+  } else {
+    frame_list.push(window.frames[0].location.href);
+  }
 
-    for (var key in json) {
-      if (key.length > 0 && key[0] == "_") {
-        continue;
-      }
+  //console.log(JSON.stringify(frame_list));
 
-      var list = key.split(" ");
+  var counter = 0;
 
-      var sec = parseInt(json[key]);
-      //var curr_moment = moment.unix(sec);
+  var all_mems = undefined;
+
+  var curr_frame_url = window.frames[0].location.href;
+
+  for (var i = 0; i < frame_list.length; i++) {
+    var url = frame_list[i].replace("/replay/", "/api/");
+    d3.json(url, function(error, json) {
+      counter++;
       
-      var host = list[0];
-      var ts = list[1];
-      var mem_url = list[2];
-      
-      if (!mem_urls[host]) {
-        if (host != "MISSING") {
-          mem_plot[host] = [];
-          mem_plot[host + "_x"] = [];
-          mem_xs[host] = host + "_x";
+      if (!all_mems) {
+        all_mems = json;
+      } else {
+        for (key in json) {
+          all_mems[key] = json[key];
         }
-        mem_urls[host] = [];
-        hasPoints = true;
       }
-      
-      mem_urls[host].push(mem_url);
-      
-      if (host == "MISSING") {
-        continue;
-      }
-      
-      var cdate = new Date(sec * 1000);
-      var y = Math.random() * 4.0 - 2.0;
 
-      if ((curr_ts_sec == sec) && (mem_url == url)) {
-        y = 1.0;
-        curr_ts_date = cdate;
+      if (counter >= frame_list.length) {
+        // ensure still on same page
+        if (window.frames[0].location.href == curr_frame_url) {
+          update_charts(all_mems);
+        }
+      } 
+    });
+  }
+}
+
+function walk_frames(frame, frame_list)
+{
+  if (!frame.WB_wombat_location) {
+    return;
+  }
+
+  if (frame.location.href === "about:blank") {
+    return;
+  }
+
+  frame_list.push(frame.location.href);
+
+  for (var i = 0; i < frame.frames.length; i++) {
+    walk_frames(frame.frames[i], frame_list);
+  }
+} 
+
+function update_charts(json) {
+  var mem_length = Object.keys(json).length;
+
+  if (mem_length == last_mem_length) {
+    return;
+  }
+
+  last_mem_length = mem_length;
+
+  var mem_plot = {};
+  var mem_xs = {};
+  var mem_urls = {};
+
+  curr_ts_sec = parseInt(json["_target_sec"]);
+  curr_ts_moment = moment.unix(curr_ts_sec);
+
+  var hasPoints = false;
+
+  for (var key in json) {
+    if (key.length > 0 && key[0] == "_") {
+      continue;
+    }
+
+    var list = key.split(" ");
+
+    var sec = parseInt(json[key]);
+    //var curr_moment = moment.unix(sec);
+
+    var host = list[0];
+    var ts = list[1];
+    var mem_url = list[2];
+
+    if (!mem_urls[host]) {
+      if (host != "MISSING") {
+        mem_plot[host] = [];
+        mem_plot[host + "_x"] = [];
+        mem_xs[host] = host + "_x";
       }
-      
-      mem_plot[host + "_x"].push(cdate);
-      mem_plot[host].push(y);
+      mem_urls[host] = [];
+      hasPoints = true;
     }
-    
-    var mem_data = {
-      plot: mem_plot,
-      xs: mem_xs,
-      urls: mem_urls
-    };
-    
-    if (hasPoints) {
-      init_scatter(mem_data);
-      init_host_chart(mem_data);
+
+    mem_urls[host].push(mem_url);
+
+    if (host == "MISSING") {
+      continue;
     }
-  });
+
+    var cdate = new Date(sec * 1000);
+    var y = Math.random() * 4.0 - 2.0;
+
+    if ((curr_ts_sec == sec) && (mem_url == last_url)) {
+      y = 1.0;
+      curr_ts_date = cdate;
+    }
+
+    mem_plot[host + "_x"].push(cdate);
+    mem_plot[host].push(y);
+  }
+
+  var mem_data = {
+    plot: mem_plot,
+    xs: mem_xs,
+    urls: mem_urls
+  };
+
+  if (hasPoints) {
+    init_scatter(mem_data);
+    init_host_chart(mem_data);
+  }
 }
 
 _wb_js.create_banner_element = function(banner_id)
@@ -363,8 +402,8 @@ _wb_js.create_banner_element = function(banner_id)
 
   window.set_state = function(state) {
     curr_state = state;
-    do_update();
-    
+    do_update(true);
+
     if (window.frames[0].document && 
         window.frames[0].document.readyState === 'complete') {
       stop_anim();
@@ -395,11 +434,11 @@ function update_while_loading()
     stop_anim();
     // don't call do_update, that's called by eventlistener
   } else {
-    do_update();
+    do_update(false);
   }
 }
 
-function do_update()
+function do_update(include_frames)
 {
   var info;
 
@@ -410,8 +449,8 @@ function do_update()
     info.url = curr_state.url;
     info.timestamp = curr_state.timestamp;
   }
-  
-  update_banner(info);
+
+  update_banner(info, include_frames);
 }
 
 function toggle_banner()
