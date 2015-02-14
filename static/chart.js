@@ -5,9 +5,9 @@ var host_chart;
 
 var curr_ts_moment;
 var curr_ts_sec;
-var curr_ts_date;
 
 var memento_dict;
+var num_plot_mementos = 0;
 
 var last_url = undefined;
 var last_timestamp = undefined;
@@ -98,7 +98,7 @@ function init_scatter(mem_data)
     xSort: false,
     color: function (color, d) {
       if (typeof(d) === "object") {
-        if (d.x == curr_ts_date) {
+        if (d.x == 0) {
           color = d3.rgb(color).brighter(1).toString();
         }
       }
@@ -107,6 +107,13 @@ function init_scatter(mem_data)
   };
 
   scatter_chart = undefined;
+  
+  // default: compute automatically
+  var tick_count = undefined;
+  
+  if (num_plot_mementos < 6) {
+    tick_count = num_plot_mementos;
+  }
 
   if (!scatter_chart) {
     scatter_chart = c3.generate({
@@ -129,16 +136,19 @@ function init_scatter(mem_data)
       axis: {
         rotated: false,
         x: {
-          type: 'timeseries',
+          //type: 'timeseries',
           show: true,
           tick: {
             //format: '%Y-%m-%d %H:%M:%S',
-            format: function (date) { return moment(date).from(curr_ts_moment); },
-            fit: true,
-            //count: 3,
-            //multiline: true,
-            //width: 50,
-            //culling: true,
+            // format: function (date) { return moment(date).from(curr_ts_moment); },
+            format: function(x) { return x_to_date_offset(x); },
+            fit: false,
+            count: tick_count,
+            multiline: true,
+            width: 60,
+            culling: {
+              max: 6
+            },
             //multiline: true,
           },
         },
@@ -152,7 +162,7 @@ function init_scatter(mem_data)
           //show: true,
           lines: [
             {
-              value: curr_ts_date,
+              value: 0,
               text: "Base Page",
             }
           ]
@@ -162,11 +172,12 @@ function init_scatter(mem_data)
       tooltip: {
         grouped: true,
         format: {
-          title: function (date) {
-            if (date == curr_ts_date) {
+          title: function (x) {
+            if (x == 0) {
               return "Base Page";
             } else {
-              return moment(date).from(curr_ts_moment);
+              return x_to_date_offset(x);
+              //return moment(date).from(curr_ts_moment);
             }
           },
 
@@ -335,7 +346,36 @@ function walk_frames(frame, frame_list)
   for (var i = 0; i < frame.frames.length; i++) {
     walk_frames(frame.frames[i], frame_list);
   }
-} 
+}
+
+function log_scale(diff)
+{
+  var scaler = 1;
+  if (diff < 0) {
+    diff = -diff;
+    scaler = -1;
+  }
+  var result = Math.log(diff + 1);
+  return scaler * result;
+}
+
+function x_to_date_offset(x)
+{
+  if (x == 0) {
+    return "Base Page";
+  }
+  
+  var scaler = 1;
+  if (x < 0) {
+    x = -x;
+    scaler = -1;
+  }
+  
+  var sec = Math.exp(x) - 1;
+  sec = curr_ts_sec + (scaler * sec);
+  
+  return moment(sec * 1000).from(curr_ts_moment); 
+}
 
 function update_charts(json) {
   var mem_length = Object.keys(json).length;
@@ -349,9 +389,14 @@ function update_charts(json) {
   var mem_plot = {};
   var mem_xs = {};
   var mem_urls = {};
+  
+  num_plot_mementos = 0;
 
   curr_ts_sec = parseInt(json["_target_sec"]);
   curr_ts_moment = moment.unix(curr_ts_sec);
+  
+  var curr_min_sec = curr_ts_sec;
+  var curr_max_sec = curr_ts_sec;
 
   var hasPoints = false;
 
@@ -384,17 +429,22 @@ function update_charts(json) {
     if (host == "MISSING") {
       continue;
     }
+    
+    curr_max_sec = Math.max(sec, curr_max_sec);
+    curr_min_sec = Math.min(sec, curr_min_sec);
 
-    var cdate = new Date(sec * 1000);
+    //var cdate = new Date(sec * 1000);
+    var x = log_scale(sec - curr_ts_sec);
     var y = Math.random() * 4.0 - 2.0;
 
     if ((curr_ts_sec == sec) && (mem_url == last_url)) {
       y = 1.0;
-      curr_ts_date = cdate;
+      x = 0;
     }
 
-    mem_plot[host + "_x"].push(cdate);
+    mem_plot[host + "_x"].push(x);
     mem_plot[host].push(y);
+    num_plot_mementos++;
   }
 
   var mem_data = {
@@ -406,6 +456,17 @@ function update_charts(json) {
   if (hasPoints) {
     init_scatter(mem_data);
     init_host_chart(mem_data);
+  }
+  
+  if (curr_max_sec == curr_min_sec) {
+    timespan = "0 sec (Base Page)";
+  } else {
+    timespan = moment(curr_max_sec * 1000).from(moment(curr_min_sec * 1000));
+    timespan = timespan.substring(0, timespan.lastIndexOf("after"));
+  }
+  var timespan_elem = document.getElementById("scatterspan");
+  if (timespan_elem) {
+    timespan_elem.innerHTML = timespan;
   }
 }
 

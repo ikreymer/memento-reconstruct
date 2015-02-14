@@ -40,7 +40,10 @@
         <p id="ts_info"></p>
       </div>
       <div id="hostchart" class="host-chart"></div>
-      <div id="scatterchart" class="scatter-chart"></div>
+      <div class="scatter-chart-cont">
+        <div id="scatterchart" class="scatter-chart"></div>
+        <div id="scattertitle" class="scatter-chart-title">Memento Time Span: <b id="scatterspan">Calculating...</b></div>
+      </div>
     </div>
     <script>
       update_capture_info(wbinfo.seconds);
