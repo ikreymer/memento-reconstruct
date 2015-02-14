@@ -128,3 +128,12 @@ html, body
   padding: 0px;
   font-weight: bold;
 }
+
+.mem-nav a {
+  text-decoration: none;
+  color: black;
+}
+
+.mem-nav a:hover {
+  color: blue;
+}

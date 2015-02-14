@@ -545,7 +545,7 @@ function toggle_banner()
   if (banner.classList.contains('closed')) {
     toggle.innerHTML = "Time Travel!";
   } else {
-    toggle.innerHTML = "X";
+    toggle.innerHTML = "&#10006;";
   }
 }
 

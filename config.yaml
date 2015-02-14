@@ -12,6 +12,8 @@ collections:
         server_cls: !!python/name:timetravel.mementoquery.MementoIndexServer
 
         wb_handler_class: !!python/name:timetravel.mementohandler.MementoHandler
+        rewrite_opts:
+            rewrite_ascii_urls_only: true
 
         #fallback: live
 
@@ -30,6 +32,10 @@ query_html: ./templates/query.html
 banner_html: ./templates/banner.html
 
 error_html: ./templates/error.html
+
+home_html: ./templates/index.html
+
+search_html: ./templates/index.html
 
 not_found_html: ./templates/not_found.html
 
