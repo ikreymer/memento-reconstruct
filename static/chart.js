@@ -149,8 +149,11 @@ function init_scatter(mem_data)
             culling: {
               max: 6
             },
-            //multiline: true,
           },
+          padding: {
+            left: 0.5,
+            right: 0.5,
+          }
         },
         y: {
           show: false,
