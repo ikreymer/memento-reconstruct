@@ -458,15 +458,22 @@ function update_charts(json) {
     init_host_chart(mem_data);
   }
   
-  if (curr_max_sec == curr_min_sec) {
-    timespan = "0 sec (Base Page)";
+  var status;
+  var meminfo_elem = document.getElementById("scatterinfo");
+  
+  if (num_plot_mementos <= 1) {
+    status = "Showing a Single Memento";
   } else {
-    timespan = moment(curr_max_sec * 1000).from(moment(curr_min_sec * 1000));
+    var timespan = moment(curr_max_sec * 1000).from(moment(curr_min_sec * 1000));
     timespan = timespan.substring(0, timespan.lastIndexOf("after"));
+    
+    status = "Showing <b>{num}</b> Mementos spanning <b>{sec}</b>";
+    status = status.replace("{num}", num_plot_mementos);
+    status = status.replace("{sec}", timespan);
   }
-  var timespan_elem = document.getElementById("scatterspan");
-  if (timespan_elem) {
-    timespan_elem.innerHTML = timespan;
+  
+  if (meminfo_elem) {
+    meminfo_elem.innerHTML = status;
   }
 }
 
@@ -507,12 +514,19 @@ function start_anim()
   if (elem) {
     elem.classList.add("rotate");
   }
+  
+  if (updater_id) {
+    return;
+  }
+
+  updater_id = window.setInterval(update_while_loading, 2000);
 }
 
 function update_while_loading()
 {
   if (document.readyState === 'complete') {
     window.clearInterval(updater_id);
+    updater_id = undefined;
     stop_anim();
     // don't call do_update, that's called by eventlistener
   } else {

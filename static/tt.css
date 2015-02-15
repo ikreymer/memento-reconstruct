@@ -79,11 +79,17 @@ html, body
 .c3-legend-item {
   font-size: 11px !important;
   line-height: 16px !important;
-}    
+}
+
+.host-chart-cont {
+  width: 29%;
+  height: 100px;
+  display: inline-block;
+}
 
 .host-chart {
   width: 29%;
-  height: 100px;
+  height: 80px;
   display: inline-block;
   text-align: left;
   vertical-align: top;
@@ -101,7 +107,7 @@ html, body
   display: inline-block;
 }
 
-.scatter-chart-title {
+.scatter-chart-info {
   width: 100%;
   height: 16px;
   display: inline-block;

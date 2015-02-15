@@ -13,7 +13,7 @@ collections:
 
         wb_handler_class: !!python/name:timetravel.mementohandler.MementoHandler
         rewrite_opts:
-            rewrite_ascii_urls_only: true
+            punycode_only_links: true
 
         #fallback: live
 

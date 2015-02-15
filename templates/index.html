@@ -5,7 +5,7 @@
       function do_timetravel()
       {
         var url = document.getElementById('search').value;
-        if (url != '') {
+        if (url == '') {
           return false;
         }
 
@@ -21,11 +21,15 @@
         }
 
         document.location.href = url;
+        return false;
       } 
     </script>
     <style>
       input {
         font-size: 16px;
+      }
+      div {
+        padding-top: 20px;
       }
       h2 {
         display: inline-block;
@@ -40,23 +44,25 @@
   </head>
   <body style="font-family: sans-serif; font-size: 14px">
     <img src="/static/m/memento_logo.svg"/>
-    <h2>Memento TimeTravel Wayback Machine</h2>
+    <h2>Memento TimeTravel Web Archive Replay</h2>
     <div>
-      <p>Enter an exact url and an optional date and time to timetravel:</p>
-      <form onsubmit="do_timetravel()">
+      <p>Enter a url and optionally, a date and time to timetravel:</p>
+      <form onsubmit="return do_timetravel()">
         <input id="search" type="text" name="search" style="width: 500px" placeholder="http://"/>
         <input id="date" type="text" name="search" style="width: 200px" placeholder="2002-02-02 10:10:26"/>
         <button type="submit">Time Travel</button>
       </form>
     </div>
+    <div>
     <p>
-      This software that provides a cross-archive replay system across multiple archives using <a href="http://memento.timetravel.org">Memento Timetravel</a>
+      This is a new demo provides a cross-archive replay system across multiple archives using <a href="http://memento.timetravel.org">Memento Timetravel</a>
     </p>
     <p>
       The software is built using the Memento API available at: <a href="http://timetravel.mementoweb.org/guide/api/">http://timetravel.mementoweb.org/guide/api/</a>
 
       and <a href="https://github.com/ikreymer/pywb">pywb web archive tools</a>
     </p>
+    </div>
   </body>
 </html>
 
