@@ -64,7 +64,7 @@ function init_host_chart(memento_dict) {
       data: data,
 
       transition: {
-        duration: 0
+        duration: 1
       },
 
       pie: {
@@ -121,7 +121,7 @@ function init_scatter(mem_data)
       data: data,
 
       transition: {
-        duration: 0
+        duration: 1
       },
 
       point: {
@@ -166,7 +166,7 @@ function init_scatter(mem_data)
           lines: [
             {
               value: 0,
-              text: "Base Page",
+              //text: "Base Page",
             }
           ]
         }
