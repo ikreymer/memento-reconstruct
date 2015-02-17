@@ -64,7 +64,7 @@ function init_host_chart(memento_dict) {
       data: data,
 
       transition: {
-        duration: 1
+        duration: 0
       },
 
       pie: {
@@ -121,7 +121,7 @@ function init_scatter(mem_data)
       data: data,
 
       transition: {
-        duration: 1
+        duration: 0
       },
 
       point: {
@@ -441,7 +441,7 @@ function update_charts(json) {
     var y = Math.random() * 4.0 - 2.0;
 
     if ((curr_ts_sec == sec) && (mem_url == last_url)) {
-      y = 1.0;
+      y = 0.0;
       x = 0;
     }
 
