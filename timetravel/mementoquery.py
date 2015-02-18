@@ -222,7 +222,7 @@ class MementoIndexServer(object):
 
         if timegate:
             mem_iter = redis_client.save_cdx_cache_iter(mem_iter, params['url'], closest)
-        
+
         return mem_iter
 
     def memento_to_cdx(self, url, mem_iter, limit, skip_exclude=True):
@@ -236,13 +236,20 @@ class MementoIndexServer(object):
                 mem = mems[0]
 
             excluded = False
-            if mem.url.startswith(EXCLUDE_LIST):
+
+            if isinstance(mem.url, list):
+                mem_url = mem.url[0]
+            else:
+                mem_url = mem.url
+
+            mem_url = mem_url.encode('utf-8')
+
+            if mem_url.startswith(EXCLUDE_LIST):
                 if skip_exclude:
                     continue
                 else:
                     excluded = True
 
-            mem_url = mem.url.encode('utf-8')
             cdx = {}
             cdx['urlkey'] = key
             cdx['timestamp'] = mem.ts
