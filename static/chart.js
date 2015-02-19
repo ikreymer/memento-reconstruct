@@ -110,8 +110,9 @@ function init_scatter(mem_data)
   
   // default: compute automatically
   var tick_count = undefined;
+  var max_ticks = 6;
   
-  if (num_plot_mementos < 6) {
+  if (num_plot_mementos < max_ticks) {
     tick_count = num_plot_mementos;
   }
 
@@ -142,17 +143,17 @@ function init_scatter(mem_data)
             //format: '%Y-%m-%d %H:%M:%S',
             // format: function (date) { return moment(date).from(curr_ts_moment); },
             format: function(x) { return x_to_date_offset(x); },
-            fit: true,
-            count: 3,
+            fit: false,
+            count: tick_count,
             multiline: true,
             width: 60,
             culling: {
-              max: 6
+              max: max_ticks,
             },
           },
           padding: {
-            left: 1.5,
-            right: 1.5,
+            left: 1.0,
+            right: 1.0,
           }
         },
         y: {
@@ -244,7 +245,9 @@ function format_diff(curr, base)
   // human readable difference, including seconds instead of a 'a few seconds'
   
   var diff = curr.diff(base);
-  var str = moment.duration(diff).humanize(true);
+  //var str = moment.duration(diff).humanize(true);
+  
+  var str = curr.from(base);
   
   if (str.indexOf("a few seconds") < 0) {
     return str;
@@ -252,9 +255,9 @@ function format_diff(curr, base)
   
   var value;
   
-  diff = Math.abs(diff);
+  diff = Math.abs(Math.round(diff / 1000));
   
-  if (diff == 1000) {
+  if (diff == 1) {
     value = "one second";
   } else {
     value = diff + " seconds";
@@ -419,7 +422,7 @@ function log_scale(diff)
     diff = -diff;
     scaler = -1;
   }
-  var result = Math.log(diff + 1);
+  var result = Math.log(diff + 1) / Math.log(10);
   return scaler * result;
 }
 
@@ -435,7 +438,7 @@ function x_to_date_offset(x)
     scaler = -1;
   }
   
-  var sec = Math.exp(x) - 1;
+  var sec = Math.pow(10, x) - 1;
   sec = curr_ts_sec + (scaler * sec);
   
   return format_diff(moment(sec * 1000), curr_ts_moment); 
