@@ -34,7 +34,7 @@ setup(
         'pywb>=0.8.0',
         ],
     dependency_links=[
-        "git+git://github.com/ikreymer/pywb.git@develop#egg=pywb-0.8.0"
+#        "git+git://github.com/ikreymer/pywb.git@develop#egg=pywb-0.8.0"
     ],
     zip_safe=False,
     cmdclass={'test': PyTest},

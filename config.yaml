@@ -15,11 +15,12 @@ collections:
         rewrite_opts:
             punycode_only_links: true
 
+        cookie_scope: exact
         #fallback: live
 
-    live:
-        index_paths: $liveweb
-        cookie_scope: root
+    #live:
+    #    index_paths: $liveweb
+    #    cookie_scope: root
 
     api:
         index_paths: $liveweb
