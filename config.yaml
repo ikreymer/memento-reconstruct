@@ -41,7 +41,7 @@ not_found_html: ./templates/not_found.html
 
 frame_insert_html: ./templates/frame_insert.html
 
-redir_to_exact: true
+redir_to_exact: false
 
 framed_replay: true
 

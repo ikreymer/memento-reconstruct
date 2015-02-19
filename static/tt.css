@@ -128,11 +128,10 @@ html, body
 }
 
 .mem-nav p {
-  margin: 4px 0 0 4px;
+  margin: 2px 0 0 2px;
   vertical-align: middle;
   border: 0px;
   padding: 0px;
-  font-weight: bold;
 }
 
 .mem-nav a {
@@ -142,4 +141,13 @@ html, body
 
 .mem-nav a:hover {
   color: blue;
+}
+
+#ts_info {
+  font-weight: bold;
+}
+
+#requested_info {
+  margin-top: 4px;
+  font-size: 12px;
 }

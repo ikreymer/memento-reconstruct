@@ -23,7 +23,6 @@ import urlparse
 WBURL_RX = re.compile('(.*/)([0-9]{1,14})(\w{2}_)?(/https?://.*)')
 
 H_TARGET_SEC = '_target_sec'
-H_REQUEST_TS = '_request_ts'
 
 
 #=============================================================================
@@ -123,7 +122,7 @@ class LiveDirectLoader(object):
                                             stream=True,
                                             verify=False)
 
-            if ((response is not None) and 
+            if ((response is not None) and
                 response.status_code >= 400 and
                 not response.headers.get('memento-datetime')):
                 response = None
@@ -143,7 +142,12 @@ class LiveDirectLoader(object):
 
         src_url_id = WBURL_RX.sub(r'\1\2id_\4', src_url)
 
-        response = self._do_req((src_url_id, src_url))
+        if src_url_id != src_url:
+            try_urls = [src_url_id, src_url]
+        else:
+            try_urls = [src_url]
+
+        response = self._do_req(try_urls)
 
         if response is None:
             failed_files.append(archive_host)
@@ -157,7 +161,7 @@ class LiveDirectLoader(object):
             raise CaptureException('Unsuccessful response, trying another')
 
         content_type = response.headers.get('content-type', 'unknown')
-        content_type = content_type.split(' ')[0]
+        content_type = content_type.split(';')[0]
         # for now, disable referrer for html to avoid links being treated as part of same page
         # for frames, must assemble on client side
         if 'text/html' in content_type:
@@ -182,7 +186,7 @@ class LiveDirectLoader(object):
                 page_key = redis_client.get_url_key(wb_url)
 
         elif is_embed and self.is_embed_ref(cdx['original']):
-            redis_client.set_refer_link(cdx['timestamp'],
+            redis_client.set_refer_link(wbrequest.wb_url.timestamp,
                                         cdx['original'],
                                         page_key)
 
@@ -193,17 +197,17 @@ class LiveDirectLoader(object):
                             wbrequest.wb_url.timestamp == wb_url.timestamp):
             redis_client.set_embed_entry(page_key, H_TARGET_SEC, str(cdx['sec']))
             orig_ref = redis_client.get_orig_from_link(page_key)
-            if orig_ref:
-                orig_ts = orig_ref.split('/', 1)[0]
-                redis_client.set_embed_entry(page_key, H_REQUEST_TS, orig_ts)
+            #if orig_ref:
+            #    orig_ts = orig_ref.split('/', 1)[0]
+            #    redis_client.set_embed_entry(page_key, H_REQUEST_TS, orig_ts)
 
         value = (parts.netloc + ' ' +
                  wbrequest.wb_url.timestamp + ' ' +
-                 wbrequest.wb_url.url)
+                 wbrequest.wb_url.url.rstrip('/'))
 
         redis_client.set_embed_entry(page_key, value, str(cdx['sec']) + ' ' + content_type)
 
-        
+
         statusline = str(response.status_code) + ' ' + response.reason
 
         headers = response.headers.items()

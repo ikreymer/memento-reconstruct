@@ -142,8 +142,8 @@ function init_scatter(mem_data)
             //format: '%Y-%m-%d %H:%M:%S',
             // format: function (date) { return moment(date).from(curr_ts_moment); },
             format: function(x) { return x_to_date_offset(x); },
-            fit: false,
-            count: tick_count,
+            fit: true,
+            count: 3,
             multiline: true,
             width: 60,
             culling: {
@@ -151,8 +151,8 @@ function init_scatter(mem_data)
             },
           },
           padding: {
-            left: 0.5,
-            right: 0.5,
+            left: 1.5,
+            right: 1.5,
           }
         },
         y: {
@@ -205,21 +205,30 @@ function init_scatter(mem_data)
   }
 }
 
-function ts_to_date(ts)
+function format_ts(ts, sep)
 {
   if (ts.length < 14) {
-    return ts;
+    ts += "20000101000000".slice(-14 + ts.length);
+  }
+  
+  if (!sep) {
+    sep = " ";
   }
 
   var datestr = (ts.substring(0, 4) + "-" +
                  ts.substring(4, 6) + "-" +
-                 ts.substring(6, 8) + "T" +
+                 ts.substring(6, 8) + sep +
                  ts.substring(8, 10) + ":" +
                  ts.substring(10, 12) + ":" +
-                 ts.substring(12, 14) + "-00:00");
+                 ts.substring(12, 14));
+  
+  return datestr;
+}
 
-  var date = new Date(datestr);
-  return date;
+function ts_to_date(ts)
+{
+  var datestr = format_ts(ts, "T") + "-00:00";
+  return new Date(datestr);
 }
 
 function init_moment_js()
@@ -230,17 +239,69 @@ function init_moment_js()
   moment.locale('en', rel);
 }
 
-function update_capture_info(secs)
+function format_diff(curr, base)
+{
+  // human readable difference, including seconds instead of a 'a few seconds'
+  
+  var diff = curr.diff(base);
+  var str = moment.duration(diff).humanize(true);
+  
+  if (str.indexOf("a few seconds") < 0) {
+    return str;
+  }
+  
+  var value;
+  
+  diff = Math.abs(diff);
+  
+  if (diff == 1000) {
+    value = "one second";
+  } else {
+    value = diff + " seconds";
+  }
+
+  str = str.replace("a few seconds", value);
+  return str;
+}
+
+function update_capture_info(secs, request_ts)
 {
   if (!secs) {
     return;
   }
 
   var elem = document.getElementById("ts_info");
+  var curr_moment = moment.utc(secs * 1000);
+  
   if (elem) {
-    //elem.innerHTML = ts_to_date(timestamp).toUTCString();
-    elem.innerHTML = moment.utc(secs * 1000).format("YYYY-MMM-DD HH:mm:ss");
+    elem.innerHTML = curr_moment.format("YYYY-MM-DD HH:mm:ss");
   }
+  
+  elem = document.getElementById("requested_info")
+  if (!elem) {
+    return;
+  }
+  
+  if (!request_ts) {
+    return;
+  }
+    
+  var request_moment = moment.utc(ts_to_date(request_ts).getTime());
+  
+  var status_str;
+  
+  if (!request_moment.isValid() || request_moment.isSame(curr_moment)) {
+    status_str = "";
+  } else {
+    status_str = format_diff(curr_moment, request_moment);
+    
+    status_str = status_str;
+    status_str += " " + format_ts(request_ts);
+    //status_str += request_moment.format("YYYY-MMM-DD HH:mm:ss") + "</b>";
+  }
+  
+  elem.innerHTML = status_str;
+  
 }
 
 function update_banner(info, include_frames)
@@ -257,7 +318,7 @@ function update_banner(info, include_frames)
       info.seconds = ts_to_date(info.timestamp).getTime() / 1000;
     }
 
-    update_capture_info(info.seconds);
+    update_capture_info(info.seconds, info.request_ts);
 
     function update_mem_link(name, backup_name)
     {
@@ -377,7 +438,7 @@ function x_to_date_offset(x)
   var sec = Math.exp(x) - 1;
   sec = curr_ts_sec + (scaler * sec);
   
-  return moment(sec * 1000).from(curr_ts_moment); 
+  return format_diff(moment(sec * 1000), curr_ts_moment); 
 }
 
 function update_charts(json) {
@@ -394,7 +455,7 @@ function update_charts(json) {
   var mem_urls = {};
   
   num_plot_mementos = 0;
-
+  
   curr_ts_sec = parseInt(json["_target_sec"]);
   curr_ts_moment = moment.unix(curr_ts_sec);
   
@@ -441,7 +502,7 @@ function update_charts(json) {
     var y = Math.random() * 4.0 - 2.0;
 
     if ((curr_ts_sec == sec) && (mem_url == last_url)) {
-      y = 0.0;
+      y = 0.5;
       x = 0;
     }
 
@@ -467,7 +528,9 @@ function update_charts(json) {
   if (num_plot_mementos <= 1) {
     status = "Showing a Single Memento";
   } else {
-    var timespan = moment(curr_max_sec * 1000).from(moment(curr_min_sec * 1000));
+    var timespan = format_diff(moment(curr_max_sec * 1000),
+                               moment(curr_min_sec * 1000));
+    
     timespan = timespan.substring(0, timespan.lastIndexOf("after"));
     
     status = "Showing <b>{num}</b> Mementos spanning <b>{sec}</b>";
@@ -547,6 +610,7 @@ function do_update(include_frames)
     info = {}
     info.url = curr_state.url;
     info.timestamp = curr_state.timestamp;
+    info.request_ts = curr_state.request_ts;
   }
 
   update_banner(info, include_frames);
