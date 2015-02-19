@@ -193,10 +193,10 @@ class MementoIndexServer(object):
                 return mem_iter
 
             mem_iter = MementoClosestQuery(self.loader, params['url'], closest)
-            
+
             skip_exclude=True
             timegate = True
-        
+
         else:
             closest = params.get('query_closest')
             try:
@@ -209,7 +209,7 @@ class MementoIndexServer(object):
                 closest = '1'
 
             mem_iter = MementoTimemapQuery(self.loader, params['url'], closest)
-            
+
             skip_exclude=False
             timegate = False
 
@@ -238,33 +238,34 @@ class MementoIndexServer(object):
             excluded = False
 
             if isinstance(mem.url, list):
-                mem_url = mem.url[0]
+                mem_list = mem.url
             else:
-                mem_url = mem.url
+                mem_list = [mem.url]
 
-            mem_url = mem_url.encode('utf-8')
+            for mem_url in mem_list:
+                mem_url = mem_url.encode('utf-8')
 
-            if mem_url.startswith(EXCLUDE_LIST):
-                if skip_exclude:
-                    continue
-                else:
-                    excluded = True
+                if mem_url.startswith(EXCLUDE_LIST):
+                    if skip_exclude:
+                        continue
+                    else:
+                        excluded = True
 
-            cdx = {}
-            cdx['urlkey'] = key
-            cdx['timestamp'] = mem.ts
-            cdx['original'] = url
-            cdx['src_url'] = mem_url
-            cdx['sec'] = mem.sec
-            cdx['src_host'] = urlsplit(mem_url).netloc
-            cdx['excluded'] = excluded
+                cdx = {}
+                cdx['urlkey'] = key
+                cdx['timestamp'] = mem.ts
+                cdx['original'] = url
+                cdx['src_url'] = mem_url
+                cdx['sec'] = mem.sec
+                cdx['src_host'] = urlsplit(mem_url).netloc
+                cdx['excluded'] = excluded
 
-            if len(mems) > 1:
-                cdx['first'] = first_.ts if first_ else ''
-                cdx['last'] = last_.ts if last_ else ''
-                cdx['next'] = next_.ts if next_ else ''
-                cdx['prev'] = prev_.ts if prev_ else ''
-            yield cdx
+                if len(mems) > 1:
+                    cdx['first'] = first_.ts if first_ else ''
+                    cdx['last'] = last_.ts if last_ else ''
+                    cdx['next'] = next_.ts if next_ else ''
+                    cdx['prev'] = prev_.ts if prev_ else ''
+                yield cdx
 
 
 def test_memento_to_cdx(url, mem):
