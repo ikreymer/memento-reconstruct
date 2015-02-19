@@ -80,7 +80,6 @@ function init_host_chart(memento_dict) {
   } else {
     data.unload = true;
     host_chart.load(data);
-    //host_chart.flush();
   }
 
   //chart.resize({width: 400});
@@ -106,7 +105,10 @@ function init_scatter(mem_data)
     }
   };
 
-  scatter_chart = undefined;
+  if (scatter_chart) {
+    scatter_chart.unload();
+  }
+//  scatter_chart = undefined;
   
   // default: compute automatically
   var tick_count = undefined;
@@ -115,6 +117,12 @@ function init_scatter(mem_data)
   if (num_plot_mementos < max_ticks) {
     tick_count = num_plot_mementos;
   }
+  
+  var padding = {left: 1.0, right: 1.0};
+  
+  if (num_plot_mementos == 1) {
+    padding.left = padding.right = 0;
+  }
 
   if (!scatter_chart) {
     scatter_chart = c3.generate({
@@ -122,7 +130,7 @@ function init_scatter(mem_data)
       data: data,
 
       transition: {
-        duration: 0
+        duration: 1,
       },
 
       point: {
@@ -151,10 +159,7 @@ function init_scatter(mem_data)
               max: max_ticks,
             },
           },
-          padding: {
-            left: 1.0,
-            right: 1.0,
-          }
+          padding: padding,
         },
         y: {
           show: false,
@@ -204,6 +209,9 @@ function init_scatter(mem_data)
     data.unload = true;
     scatter_chart.load(data);
   }
+  scatter_chart.flush();
+  //scatter_chart.xgrids.add({value: 0});
+  //scatter_chart.flush();
 }
 
 function format_ts(ts, sep)
@@ -502,7 +510,18 @@ function update_charts(json) {
 
     //var cdate = new Date(sec * 1000);
     var x = log_scale(sec - curr_ts_sec);
-    var y = Math.random() * 4.0 - 2.0;
+    
+    function make_hash(str) {
+      var hash = 0;
+      for (i = 0; i < str.length; i++) {
+        var char = str.charCodeAt(i);
+        hash = ((hash<<5)-hash)+char;
+        hash = hash & hash; // Convert to 32bit integer
+      }
+      return hash;
+    }
+    //var y = Math.random() * 4.0 - 2.0;
+    var y = make_hash(mem_url) % 40 - 20;
 
     if ((curr_ts_sec == sec) && (mem_url == last_url)) {
       y = 0.5;

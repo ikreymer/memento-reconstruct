@@ -72,13 +72,16 @@ class MementoHandler(WBHandler):
         except NotFoundException as nfe:
             if wbrequest.referrer and wbrequest.referrer.startswith(wbrequest.wb_prefix):
                 wb_url = WbUrl(wbrequest.referrer[len(wbrequest.wb_prefix):])
-                page_key = redis_client.get_url_key(wb_url)
 
-                value = ('MISSING ' +
-                          wbrequest.wb_url.timestamp + ' ' +
-                          wbrequest.wb_url.url)
+                # skip browser generaed .map files
+                if not wb_url.url.endswith('.map'):
+                    page_key = redis_client.get_url_key(wb_url)
 
-                redis_client.set_embed_entry(page_key, value, '0')
+                    value = ('MISSING ' +
+                              wbrequest.wb_url.timestamp + ' ' +
+                              wbrequest.wb_url.url.rstrip('/'))
+
+                    redis_client.set_embed_entry(page_key, value, '0')
 
 
             return self.handle_not_found(wbrequest, nfe)
