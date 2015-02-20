@@ -5,9 +5,11 @@ var host_chart;
 
 var curr_ts_moment;
 var curr_ts_sec;
+var base_page_info;
 
 var memento_dict;
 var num_plot_mementos = 0;
+var num_hosts = 0;
 
 var last_url = undefined;
 var last_timestamp = undefined;
@@ -183,7 +185,7 @@ function init_scatter(mem_data)
         format: {
           title: function (x) {
             if (x == 0) {
-              return "Base Page";
+              return "Base Page: " + base_page_info;
             } else {
               return x_to_date_offset(x);
               //return moment(date).from(curr_ts_moment);
@@ -437,7 +439,7 @@ function log_scale(diff)
 function x_to_date_offset(x)
 {
   if (x == 0) {
-    return "Base Page";
+    return base_page_info;
   }
   
   var scaler = 1;
@@ -466,9 +468,12 @@ function update_charts(json) {
   var mem_urls = {};
   
   num_plot_mementos = 0;
+  num_hosts = 0;
   
   curr_ts_sec = parseInt(json["_target_sec"]);
   curr_ts_moment = moment.unix(curr_ts_sec);
+  
+  base_page_info = curr_ts_moment.format("YYYY-MM-DD HH:mm:ss");
   
   var curr_min_sec = curr_ts_sec;
   var curr_max_sec = curr_ts_sec;
@@ -494,6 +499,7 @@ function update_charts(json) {
         mem_plot[host] = [];
         mem_plot[host + "_x"] = [];
         mem_xs[host] = host + "_x";
+        num_hosts++;
       }
       mem_urls[host] = [];
       hasPoints = true;
@@ -548,16 +554,17 @@ function update_charts(json) {
   var meminfo_elem = document.getElementById("scatterinfo");
   
   if (num_plot_mementos <= 1) {
-    status = "Showing a Single Memento";
+    status = "Single Page Memento";
   } else {
     var timespan = format_diff(moment(curr_max_sec * 1000),
                                moment(curr_min_sec * 1000));
     
     timespan = timespan.substring(0, timespan.lastIndexOf("after"));
     
-    status = "Showing <b>{num}</b> Mementos spanning <b>{sec}</b>";
+    status = "Page assembled using <b>{num}</b> Mementos from <b>{hosts}</b> archives, spanning <b>{sec}</b>";
     status = status.replace("{num}", num_plot_mementos);
     status = status.replace("{sec}", timespan);
+    status = status.replace("{hosts}", num_hosts);
   }
   
   if (meminfo_elem) {

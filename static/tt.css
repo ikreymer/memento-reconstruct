@@ -144,7 +144,9 @@ html, body
 }
 
 #ts_info {
+  margin-top: 4px;
   font-weight: bold;
+  font-size: 11px;
 }
 
 #requested_info {
