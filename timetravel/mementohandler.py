@@ -52,13 +52,17 @@ class MementoHandler(WBHandler):
         except Exception as e:
             offset = 1
 
-        cdx_lines = list(cdx_lines)
+        cdx_json = None
+        if output != 'text':
+            cdx_lines = list(cdx_lines)
 
-        try:
-            cdx_json = [dict(host=cdx['src_host'], ts=cdx['timestamp']) for cdx in cdx_lines]
-            cdx_json = json.dumps(cdx_json)
-        except Exception as e:
-            logging.debug(e)
+            try:
+                cdx_json = [dict(host=cdx['src_host'], ts=cdx['timestamp']) for cdx in cdx_lines]
+                cdx_json = json.dumps(cdx_json)
+            except Exception as e:
+                logging.debug(e)
+
+            cdx_lines = iter(cdx_lines)
 
         return self.index_reader.make_cdx_response(wbrequest,
                                                    cdx_lines,

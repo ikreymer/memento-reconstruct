@@ -4,6 +4,7 @@ import calendar
 import datetime
 import itertools
 import urllib
+import json
 
 from collections import namedtuple
 
@@ -223,6 +224,10 @@ class MementoIndexServer(object):
         if timegate:
             mem_iter = redis_client.save_cdx_cache_iter(mem_iter, params['url'], closest)
 
+
+        if params.get('output') == 'text':
+            mem_iter = self.cdx_to_text(mem_iter)
+
         return mem_iter
 
     def memento_to_cdx(self, url, mem_iter, limit, skip_exclude=True):
@@ -266,6 +271,14 @@ class MementoIndexServer(object):
                     cdx['next'] = next_.ts if next_ else ''
                     cdx['prev'] = prev_.ts if prev_ else ''
                 yield cdx
+
+    def cdx_to_text(self, cdx_list):
+        for cdx in cdx_list:
+            string = cdx['urlkey'] + ' ' + cdx['timestamp']
+            del cdx['urlkey']
+            del cdx['timestamp']
+            string += ' ' + json.dumps(cdx) + '\n'
+            yield string
 
 
 def test_memento_to_cdx(url, mem):
