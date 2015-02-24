@@ -51,8 +51,10 @@
       init_moment_js();
     </script>
     <a id="banner_toggle" href="#" onclick="toggle_banner()">&#10006;</a>
+    <div id="iframe_div">
     <iframe src="{{ wbrequest.wb_prefix + embed_url }}" onload="iframe_loaded(event);" seamless="seamless" 
-            frameborder="1" scrolling="no" class="wb_iframe"
+            frameborder="0" scrolling="yes" class="wb_iframe"
             sandbox="allow-same-origin allow-forms allow-popups allow-scripts allow-pointer-lock"/>
+    </div>
   </body>
 </html>

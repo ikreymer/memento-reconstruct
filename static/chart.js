@@ -650,6 +650,9 @@ function toggle_banner()
   var banner = document.getElementById('mt_banner');
   banner.classList.toggle('closed');
 
+  var frame_div = document.getElementById('iframe_div');
+  frame_div.classList.toggle('closed');
+
   var toggle = document.getElementById('banner_toggle');
 
   if (banner.classList.contains('closed')) {
