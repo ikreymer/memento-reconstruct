@@ -1,10 +1,10 @@
 Memento Cross-Archive Replay Service
 ====================================
 
-Uses the memento api to provide a unified replay system across multiple existing archives.
+A unified replay system based on the memento api to provide across multiple existing archives.
 
-Installation
-~~~~~~~~~~~~
+
+## Installation
 
 1. `python setup.py install`
 
