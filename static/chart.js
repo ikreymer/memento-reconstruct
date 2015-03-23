@@ -132,7 +132,7 @@ function init_scatter(mem_data)
       data: data,
 
       transition: {
-        duration: 1,
+        duration: 0,
       },
 
       point: {

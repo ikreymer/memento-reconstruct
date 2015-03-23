@@ -249,6 +249,9 @@ class MementoIndexServer(object):
 
             for mem_url in mem_list:
                 mem_url = mem_url.encode('utf-8')
+                # handle scheme relative urls
+                if mem_url.startswith('//'):
+                    mem_url = 'http:' + mem_url
 
                 if mem_url.startswith(EXCLUDE_LIST):
                     if skip_exclude:
