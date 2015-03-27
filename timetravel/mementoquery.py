@@ -262,7 +262,7 @@ class MementoIndexServer(object):
                 cdx = {}
                 cdx['urlkey'] = key
                 cdx['timestamp'] = mem.ts
-                cdx['original'] = url
+                cdx['url'] = url
                 cdx['src_url'] = mem_url
                 cdx['sec'] = mem.sec
                 cdx['src_host'] = urlsplit(mem_url).netloc
@@ -303,7 +303,7 @@ def main():
     for cdx in cdx_iter:
         if not sec:
             sec = cdx['sec']
-        #print(cdx['timestamp'] + ' ' + cdx['original'] + ' ' + cdx['src_host'] + ' ' + str(sec - cdx['sec']))
+        #print(cdx['timestamp'] + ' ' + cdx['url'] + ' ' + cdx['src_host'] + ' ' + str(sec - cdx['sec']))
         print(cdx['prev'] + ' ' + cdx['timestamp'] + ' ' + cdx['next'] + ' ' + str(sec - cdx['sec']))
 
 

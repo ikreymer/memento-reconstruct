@@ -19,7 +19,7 @@ class PyTest(TestCommand):
 
 setup(
     name='pywb-timetravel',
-    version='1.1.1',
+    version='1.2.0',
 #    url='https://github.com/ikreymer/pywb-timetravel',
     author='Ilya Kreymer',
     author_email='ikreymer@gmail.com',
@@ -31,7 +31,7 @@ setup(
         'timetravel',
         ],
     install_requires=[
-        'pywb==0.8.3',
+        'pywb>=0.9.2',
         ],
     dependency_links=[
 #        "git+git://github.com/ikreymer/pywb.git@develop#egg=pywb-0.8.0"

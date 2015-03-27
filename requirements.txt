@@ -1,4 +1,4 @@
 redis
-pywb==0.8.3
+pywb>=0.9.2
 #-e git+git://github.com/ikreymer/pywb.git@develop#egg=pywb
 uwsgi>=2.0

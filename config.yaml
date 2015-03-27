@@ -1,5 +1,5 @@
 static_routes:
-          static/default: pywb/static/
+          static/__pywb: pywb/static/
           static/m: ./static/
 
 
@@ -51,4 +51,3 @@ enable_cdx_api: true
 enable_memento: true
 
 urlrewriter_class: !!python/name:timetravel.mementohandler.ReUrlRewriter
-

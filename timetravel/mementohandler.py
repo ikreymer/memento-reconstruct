@@ -192,9 +192,9 @@ class LiveDirectLoader(object):
                 wb_url = WbUrl(orig_ref)
                 page_key = redis_client.get_url_key(wb_url)
 
-        elif is_embed and self.is_embed_ref(cdx['original']):
+        elif is_embed and self.is_embed_ref(cdx['url']):
             redis_client.set_refer_link(wbrequest.wb_url.timestamp,
-                                        cdx['original'],
+                                        cdx['url'],
                                         page_key)
 
         parts = urlparse.urlsplit(src_url)
