@@ -6,10 +6,12 @@
       wbinfo.prefix = "{{ wbrequest.wb_prefix }}";
       wbinfo.capture_url = "{{ url }}";
       wbinfo.timestamp = "{{ wbrequest.wb_url.timestamp }}";
+      wbinfo.is_frame = true;
+      wbinfo.frame_mod = "{{ wbrequest.options.frame_mod }}";
+      wbinfo.replay_mod = "{{ wbrequest.options.replay_mod }}";
       {% if wbrequest.wb_url.timestamp %}
       wbinfo.seconds = {{ wbrequest.wb_url.timestamp | format_ts('%s') }};
       {% endif %}
-      wbinfo.is_frame = true;
     </script>
 
     <script src='{{ wbrequest.host_prefix }}/{{ static_path }}/wb.js'> </script>

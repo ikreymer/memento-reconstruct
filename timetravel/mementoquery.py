@@ -230,6 +230,31 @@ class MementoIndexServer(object):
 
         return mem_iter
 
+    def sort_archives(self, archive_list):
+        ait = None
+        ia = None
+        pt = None
+        for url in archive_list:
+            if '/web.archive.org/' in url:
+                ia = url
+            elif '/wayback.archive-it.org/' in url:
+                ait = url
+            elif '/arquivo.pt/' in url:
+                pt = url
+            elif '/archive.today/' in url:
+                continue
+            else:
+                yield url
+
+        if ait:
+            yield ait
+
+        if ia:
+            yield ia
+
+        if pt:
+            yield pt
+
     def memento_to_cdx(self, url, mem_iter, limit, skip_exclude=True):
         key = canonicalize(url)
 
@@ -244,8 +269,12 @@ class MementoIndexServer(object):
 
             if isinstance(mem.url, list):
                 mem_list = mem.url
+                count = len(mem_list)
+                if count > 1:
+                    mem_list = self.sort_archives(mem_list)
             else:
                 mem_list = [mem.url]
+                count = 1
 
             for mem_url in mem_list:
                 mem_url = mem_url.encode('utf-8')
@@ -267,6 +296,7 @@ class MementoIndexServer(object):
                 cdx['sec'] = mem.sec
                 cdx['src_host'] = urlsplit(mem_url).netloc
                 cdx['excluded'] = excluded
+                cdx['dupes'] = count
 
                 if len(mems) > 1:
                     cdx['first'] = first_.ts if first_ else ''

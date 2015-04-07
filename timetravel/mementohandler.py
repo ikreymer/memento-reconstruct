@@ -121,7 +121,8 @@ class LiveDirectLoader(object):
         """
         return url.split('?')[0].endswith('.css')
 
-    def _do_req(self, urls):
+    def _do_req(self, urls, archive_host, skip_hosts):
+        response = None
         for url in urls:
             response = self.session.request(method='GET',
                                             url=url,
@@ -129,22 +130,31 @@ class LiveDirectLoader(object):
                                             stream=True,
                                             verify=False)
 
-            if ((response is not None) and
-                response.status_code >= 400 and
-                not response.headers.get('memento-datetime')):
-                response = None
+            if response is None:
                 continue
 
+            mem_date_time = response.headers.get('memento-datetime')
+
+            if (response.status_code >= 400 and not mem_date_time):
+                if (response.status_code == 403 or response.status_code >= 500):
+                    # don't try again
+                    skip_hosts.append(archive_host)
+                    return None
+
+                # try again
+                continue
+
+            # success
             return response
 
         return response
 
-    def __call__(self, cdx, failed_files, cdx_loader, wbrequest):
+    def __call__(self, cdx, skip_hosts, cdx_loader, wbrequest):
         src_url = cdx['src_url']
         parts = urlparse.urlsplit(src_url)
         archive_host = parts.netloc
 
-        if archive_host in failed_files:
+        if archive_host in skip_hosts:
             raise CaptureException('Skipping already failed: ' + archive_host)
 
         src_url_id = WBURL_RX.sub(r'\1\2id_\4', src_url)
@@ -154,17 +164,10 @@ class LiveDirectLoader(object):
         else:
             try_urls = [src_url]
 
-        response = self._do_req(try_urls)
+        response = self._do_req(try_urls, archive_host, skip_hosts)
 
         if response is None:
-            failed_files.append(archive_host)
-            raise CaptureException('Unsuccessful response, trying another')
-
-        mem_date_time = response.headers.get('memento-datetime', 'mem')
-
-        if (response.status_code >= 400 and not mem_date_time):
-            if response.status_code == 403 or response.status_code >= 500:
-                failed_files.append(archive_host)
+            #skip_hosts.append(archive_host)
             raise CaptureException('Unsuccessful response, trying another')
 
         content_type = response.headers.get('content-type', 'unknown')
@@ -236,7 +239,7 @@ class ReUrlRewriter(UrlRewriter):
         m = WBURL_RX.match(url)
         if m:
             if not mod:
-                mod = ''
+                mod = self.wburl.mod
             return self.prefix + m.group(2) + mod + m.group(4)
         else:
             return super(ReUrlRewriter, self).rewrite(url, mod)

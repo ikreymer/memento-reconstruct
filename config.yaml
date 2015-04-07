@@ -27,24 +27,13 @@ collections:
         wb_handler_class: !!python/name:timetravel.mementohandler.APIHandler
 
 
+home_html: index.html
 
-query_html: ./templates/query.html
-
-banner_html: ./templates/banner.html
-
-error_html: ./templates/error.html
-
-home_html: ./templates/index.html
-
-search_html: ./templates/index.html
-
-not_found_html: ./templates/not_found.html
-
-frame_insert_html: ./templates/frame_insert.html
+search_html: index.html
 
 redir_to_exact: false
 
-framed_replay: true
+framed_replay: inverse
 
 enable_cdx_api: true
 
