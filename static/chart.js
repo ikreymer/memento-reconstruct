@@ -372,9 +372,9 @@ function load_all(include_frames)
   var frame_list = [];
 
   if (include_frames) {
-    walk_frames(window.frames[0], frame_list);
+    walk_frames(window.frames[1], frame_list);
   } else {
-    frame_list.push(window.frames[0].location.href);
+    frame_list.push(window.frames[1].location.href);
   }
 
   //console.log(JSON.stringify(frame_list));
@@ -383,7 +383,7 @@ function load_all(include_frames)
 
   var all_mems = undefined;
 
-  var curr_frame_url = window.frames[0].location.href;
+  var curr_frame_url = window.frames[1].location.href;
 
   for (var i = 0; i < frame_list.length; i++) {
     var url = frame_list[i].replace("/replay/", "/api/");
@@ -400,7 +400,7 @@ function load_all(include_frames)
 
       if (counter >= frame_list.length) {
         // ensure still on same page
-        if (window.frames[0].location.href == curr_frame_url) {
+        if (window.frames[1].location.href == curr_frame_url) {
           update_charts(all_mems);
         }
       } 
@@ -561,7 +561,7 @@ function update_charts(json) {
     
     timespan = timespan.substring(0, timespan.lastIndexOf("after"));
     
-    status = "Page assembled using <b>{num}</b> Mementos from <b>{hosts}</b> archives, spanning <b>{sec}</b>";
+    status = "The page below assembled using <b>{num}</b> Mementos from <b>{hosts}</b> archives, spanning <b>{sec}</b>";
     status = status.replace("{num}", num_plot_mementos);
     status = status.replace("{sec}", timespan);
     status = status.replace("{hosts}", num_hosts);

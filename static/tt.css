@@ -1,93 +1,96 @@
 html, body 
 { 
-  height: 100%;
-  margin: 0px;
-  padding: 0px;
-  border: 0px;
-  overflow: hidden;
+    height: 100%;
+    margin: 0px auto;
+    padding: 0px;
+    border: 0px;
+    /*overflow: hidden;*/
+    width: 980px;
 }
 
 .wb_iframe
 {
-  width: 100%;
-  height: 100%;
-  padding: 0px 0px 0px 0px;
-  border: 0px;
-  overflow: scroll;
+    width: 100%;
+    height: 100%;
+    padding: 0px 0px 0px 0px;
+    border: 0px;
+    overflow: scroll;
 }
 
 #iframe_div
 {
-  position: absolute;
-  top: 120px;
-  bottom: 0px;
-  width: 100%;
-  /*height: 100%;*/
-  transition: top 1.0s;
+    /*
+    position: absolute;
+    top: 120px;
+     */
+bottom: 0px;
+width: 100%;
+/*height: 100%;*/
+transition: top 1.0s;
 }
 
 #iframe_div.closed
 {
-  top: 0px;
+    top: 0px;
 }
 
 #mt_banner
 {
-  font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
-  width: 100%;
-  background-color: white;
+    font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    width: 100%;
+    background-color: #ddd;
 
-  /*  position: absolute;*/
-  border: 0px;
-  height: 110px;
-  transition: margin-top 1.0s;
-  top: 0px;
+    /*  position: absolute;*/
+    border: 0px;
+    height: 110px;
+    transition: margin-top 1.0s;
+    top: 0px;
 
-  box-shadow: 0 5px 10px #777;
-  margin-bottom: 15px;
+    /*box-shadow: 0 5px 10px #777;*/
+    margin-bottom: 15px;
 }
 
 #mt_banner.closed
 {
-  margin-top: -125px;
+    margin-top: -125px;
 }
 
 #banner_toggle
 {
-  position: absolute;
-  top: 4px;
-  right: 4px;
+    position: absolute;
+    top: 4px;
+    right: 4px;
 
-  font-family: sans-serif;
-  font-size: 12px;
-  font-weight: bold;
-  color: white;
-  background-color: black;
-  padding: 4px;
-  text-decoration: none;
-  z-index: 10000;
+    font-family: sans-serif;
+    font-size: 12px;
+    font-weight: bold;
+    color: white;
+    background-color: black;
+    padding: 4px;
+    text-decoration: none;
+    z-index: 10000;
 }
 
 #banner_toggle:hover
 {
-  text-decoration: underline;
+    text-decoration: underline;
 }
 
 .icon { 
-  width: 60px;
-  height: 60px; 
-  display: inline-block;
-  vertical-align: middle;
+    width: 60px;
+    height: 60px; 
+    display: inline-block;
+    vertical-align: middle;
 }
 
 .hidden {
-  display: none;
+    display: none;
 }
 
 .rotate {
-  -webkit-animation:spin 4s linear infinite;
-  -moz-animation:spin 4s linear infinite;
-  animation:spin 4s linear infinite;
+    -webkit-animation:spin 4s linear infinite;
+    -moz-animation:spin 4s linear infinite;
+    animation:spin 4s linear infinite;
 }
 @-moz-keyframes spin { 100% { -moz-transform: rotate(-360deg); } }
 @-webkit-keyframes spin { 100% { -webkit-transform: rotate(-360deg); } }
@@ -95,79 +98,79 @@ html, body
 
 
 .c3-legend-item {
-  font-size: 11px !important;
-  line-height: 16px !important;
+    font-size: 11px !important;
+    line-height: 16px !important;
 }
 
 .host-chart-cont {
-  width: 29%;
-  height: 100px;
-  display: inline-block;
+    width: 29%;
+    height: 100px;
+    display: inline-block;
 }
 
 .host-chart {
-  width: 29%;
-  height: 80px;
-  display: inline-block;
-  text-align: left;
-  vertical-align: top;
+    width: 29%;
+    height: 80px;
+    display: inline-block;
+    text-align: left;
+    vertical-align: top;
 }
 
 .scatter-chart-cont {
-  width: 52%;
-  height: 110px;
-  display: inline-block;
+    width: 70%;
+    height: 110px;
+    display: inline-block;
 }
 
 .scatter-chart {
-  width: 100%;
-  height: 80px;
-  display: inline-block;
+    width: 100%;
+    height: 80px;
+    display: inline-block;
 }
 
 .scatter-chart-info {
-  width: 100%;
-  height: 16px;
-  display: inline-block;
-  text-align: center;
-  padding-top: 8px;
-  vertical-align: bottom;
-  font-size: 12px;
+    width: 100%;
+    height: 20px;
+    display: inline-block;
+    /*text-align: center;*/
+    padding-top: 8px;
+    vertical-align: bottom;
+    font-size: 1.0em;
 }
 
 .mem-nav {
-  width: 15%;
-  display: inline-block;
-  vertical-align: top;
-  text-align: center;
-  padding-left: 4px;
-  padding-top: 4px;
-  font-size: 16px;
+    width: 15%;
+    display: inline-block;
+    vertical-align: top;
+    text-align: center;
+    padding-left: 4px;
+    padding-top: 4px;
+    font-size: 16px;
 }
 
 .mem-nav p {
-  margin: 2px 0 0 2px;
-  vertical-align: middle;
-  border: 0px;
-  padding: 0px;
+    margin: 2px 0 0 2px;
+    vertical-align: middle;
+    border: 0px;
+    padding: 0px;
 }
 
 .mem-nav a {
-  text-decoration: none;
-  color: black;
+    text-decoration: none;
+    color: black;
 }
 
 .mem-nav a:hover {
-  color: blue;
+    color: blue;
 }
 
 #ts_info {
-  margin-top: 4px;
-  font-weight: bold;
-  font-size: 11px;
+    margin-top: 4px;
+    font-weight: bold;
+    font-size: 11px;
 }
 
 #requested_info {
-  margin-top: 4px;
-  font-size: 11px;
+    margin-top: 4px;
+    font-size: 11px;
 }
