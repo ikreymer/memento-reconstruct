@@ -1,0 +1,266 @@
+body {
+    width: 980px;
+    margin: 0 auto;
+    padding: 0 10px 0 10px;
+    font-family: Helvetica;
+}
+#header {
+    background: #ddd;
+    padding: 10px 10px 0 10px;
+    margin: 10px 0 15px 0;
+    height: 85px;
+}
+#header input {
+    padding: 5px;
+    font-size: 0.9em;
+    margin-bottom: 10px;
+}
+#memento_logo {
+    float: left;
+    width: 80px;
+    height: 80px;
+    padding-right: 10px;
+}
+#url {
+    width: 944px;
+}
+#url.start_page {
+    width: 944px;
+}
+#url.result_input {
+    width: 944px;
+}
+.start_input {
+    width: 230px;
+}
+.result_input {
+    /*width: 183px;*/
+    /*width: 230px;*/
+    width: 194px;
+}
+#metadata {
+    padding: 10px 10px 10px 10px;
+    background: #ddd;
+    margin: 10px 0 20px 0;
+    height: 40px;
+}
+.timeline {
+    /*margin-left: 70px;*/
+    padding-top: 10px;
+    width: 860px;
+    height: 100px;
+}
+#summary {
+    padding-top: 10px;
+    padding-bottom: 10px;
+    margin: 0 auto;
+} 
+#summary a {
+    padding-right: 30px;
+}
+.chart {
+    font-size: 10px;
+}
+.axis path, .axis line {
+    fill: none;
+    stroke: #000;
+    shape-rendering: crispEdges;
+}
+.tick line{
+    stroke: #949494;
+}
+.tick text {
+    font-weight: bold;
+}
+.chart_infobox {
+    border: 2px solid black;
+    border-radius: 4px;
+    box-shadow: #333333 0px 0px 10px;
+    margin: 200px auto;
+    padding: 5px 10px;
+    background: rgba(255, 255, 255, 0.8);
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    z-index: 10500;
+    font-weight: bold;
+}
+#result_wrapper {
+    width: 760px;
+}
+.results {
+    padding-bottom: 30px;
+}
+.result_heading {
+    font-size: 1.0em;
+    margin: 0;
+}
+.result_heading a {
+    font-weight: bold;
+    font-size: 1.1em;
+}
+.result_archive_url {
+    color: green;
+    font-size: 0.8em;
+    margin: 0;
+}
+.result_archive_dt {
+    font-size: 0.8em;
+    margin: 0;
+}
+.sub-results {
+    margin-left: 20px;
+}
+.sub-results-row {
+    font-size: 1.0em;
+    padding-top: 10px;
+    min-width: 700px;
+}
+.sub-results-row td {
+    table-layout: fixed;
+    overflow: hidden;
+}
+.sub-results-row td.left_label {
+    min-width: 250px;
+}
+.sub-results-row td.right_label {
+    min-width: 250px;
+}
+.sub_result_date {
+    padding-right: 40px;
+}
+.sub_sub_result {
+    padding-left: 20px;
+    font-size: 0.8em;
+    margin: 3px 0 3px 0;
+}
+/*
+.sub-results-row a {
+    padding-left: 10px;
+}
+*/
+.archive-calendar-page {
+    float: left;
+    padding-top: 5px;
+    font-size: 0.8em;
+}
+.archive-img {
+    width: 16px;
+    height: 16px;
+}
+.memento-links {
+    margin: 10px 10px 0px 0;
+}
+/*
+.memento_buttons {
+    font-size: 2em;
+}
+*/
+.memento_buttons .ui-button-text {
+    padding: .25em 1em;
+}
+#this_memento {
+    height: 100%;
+    text-align: center;
+    background: #ddd;
+    color: #525252;
+    border: 0;
+    /*width: 218px;*/
+    width: 204px;
+    display: inline-block;
+    font-size: 1.0em;
+    height: 30px;
+}
+/*
+#footer {
+    background: #ddd;
+    height: 60px;
+    bottom: 0;
+    position: absolute;
+    width: 100%;
+    left: 0;
+    right: 0;
+    width: 880px;
+    text-align: center;
+}
+#footer a {
+    padding-left: 15px;
+}
+*/
+#list_footer {
+    background: #ddd;
+    height: 60px;
+    position: absolute;
+    /*
+    width: 100%;
+    left: 0;
+    right: 0;
+    */
+    text-align: center;
+    width: 980px;
+}
+#list_footer a {
+    padding-left: 15px;
+}
+#menu_bottom {
+    /*padding-top: 20px;*/
+}
+#logo {
+    text-align: center;
+    width: 100%;
+}
+#memento_info {
+    /*padding-left: 0px;
+    width: 366px;*/
+    display: inline-block;
+}
+#menu_top {
+    /*float: right;*/
+    /*padding: 10px 10px 0 0;*/
+}
+#list_menu_top {
+    padding: 15px 10px 10px 0;
+    /*width: 310px;*/
+    text-align: right;
+}
+.memento_error {
+    padding: 10px;
+}
+#right_pane {
+    float: right;
+    border-left: 1px solid #ddd;
+    padding-left: 10px;
+    font-size: 0.9em;
+}
+#right_pane div {
+    border-bottom: 1px solid #ddd;
+    padding: 10px 0;
+}
+.right_pane_img {
+    width: 200px;
+    height: 133.6px;
+}
+#reconstruct {
+    font-size: 1.0em;
+    color: #fff;
+}
+#search {
+    font-size: 1.0em;
+    color: #fff;
+}
+#nostalgic {
+    font-size: 1.0em;
+    width: 324px;
+    color: #fff;
+}
+#tag_line {
+    padding-top: 20px;
+    color: #525252;
+    text-align: center;
+}
+.more_mementos {
+    padding-top: 5px;
+}
+.more_mementos_title {
+    /*font-weight: bold;*/
+}
