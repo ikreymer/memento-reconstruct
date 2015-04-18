@@ -3,11 +3,14 @@ var updater_id = undefined;
 var scatter_chart;
 var host_chart;
 
-var memento_dt_moment, memento_dt_x;
+var memento_diff_x;
 
 var curr_ts_moment;
 var curr_ts_sec;
+
 var base_page_info;
+
+var x_max, x_min;
 
 var memento_dict;
 var num_plot_mementos = 0;
@@ -163,18 +166,22 @@ function init_scatter(mem_data)
         tick_count = num_plot_mementos;
     }
 
-    var padding = {left: 1.0, right: 1.0};
+    // Should this be a fraction of the total span?
+    var padding = {left: 0.2, right: 0.2};
 
-    if (num_plot_mementos == 1) {
-        padding.left = padding.right = 0;
-    }
+//    if (memento_diff_x == 0) {
+//        padding.left = padding.right = 0;
+//    }
 
     if (!scatter_chart) {
         
-        var lines =  [{ value: 0, text: 'Requested' }];
+        var lines;
         
-        if (memento_dt_x) {
-            lines.push({value: memento_dt_x, text: 'Base'});
+        if (memento_diff_x) {
+            lines = [{value: 0, text: "Request"},
+                     {value: memento_diff_x, text: "Base"}];
+        } else {
+            lines = [{value: 0, text: "Request = Base"}];
         }
         
         scatter_chart = c3.generate({
@@ -212,6 +219,8 @@ function init_scatter(mem_data)
                         },
                     },
                     padding: padding,
+                    max: x_max,
+                    min: x_min,
                 },
                 y: {
                     show: false,
@@ -251,6 +260,9 @@ function init_scatter(mem_data)
     } else {
         //data.unload = true;
         scatter_chart.load(data);
+        scatter_chart.xgrids(lines);
+        
+        scatter_chart.axis.range({max: {x: x_max}, min: {x: x_min}})
     }
     //scatter_chart.flush();
     //scatter_chart.xgrids.add({value: 0});
@@ -375,10 +387,9 @@ function update_banner(info, include_frames)
         curr_ts_sec = info.request_secs;
         curr_ts_moment = moment(curr_ts_sec * 1000);
         
-        memento_dt_x = log_scale(info.seconds - info.request_secs);
-        console.log(memento_dt_x);
+        memento_diff_x = log_scale(info.seconds - info.request_secs);
         
-        memento_dt_moment = moment.utc(info.seconds * 1000);
+        //memento_dt_moment = moment.utc(info.seconds * 1000);
 
         base_page_info = curr_ts_moment.utc().format("YYYY-MM-DD HH:mm:ss");
         
@@ -473,7 +484,7 @@ function log_scale(diff)
 
 function x_to_date_offset(x, add_abs)
 {
-    if (x == 0) {
+    if (approx_eq(x, 0)) {
         return base_page_info;
     }
 
@@ -515,6 +526,9 @@ function update_charts(info, json) {
 
     var curr_min_sec = curr_ts_sec;
     var curr_max_sec = curr_ts_sec;
+    
+    x_max = 0;
+    x_min = 0;
 
     var hasPoints = false;
 
@@ -555,6 +569,9 @@ function update_charts(info, json) {
 
         //var cdate = new Date(sec * 1000);
         var x = log_scale(sec - curr_ts_sec);
+        
+        x_max = Math.max(x_max, x);
+        x_min = Math.min(x_min, x);
 
         function make_hash(str) {
             var hash = 0;
