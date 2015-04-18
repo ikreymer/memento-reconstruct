@@ -3,9 +3,7 @@ var updater_id = undefined;
 var scatter_chart;
 var host_chart;
 
-var curr_request_moment;
-
-var accept_dt_info, accept_dt_x;
+var memento_dt_moment, memento_dt_x;
 
 var curr_ts_moment;
 var curr_ts_sec;
@@ -19,19 +17,9 @@ var last_url = undefined;
 var last_timestamp = undefined;
 var last_mem_length = 0;
 
-
-function cdx_json_to_host_agg(cdx_json) {
-    var urls = {};
-
-    for (var i = 0; i < cdx_json.length; i++) {
-        var host = cdx_json[i].host;
-        if (urls[host] != undefined) {
-            urls[host]++;
-        } else {
-            urls[host] = 0;
-        }
-    }
-    return {urls: urls};
+function approx_eq(a, b)
+{
+    return Math.abs(a - b) < 0.0001;
 }
 
 var COLOR_MAP = 
@@ -182,13 +170,10 @@ function init_scatter(mem_data)
 
     if (!scatter_chart) {
         
-        var lines =  [{ value: 0 }];
+        var lines =  [{ value: 0, text: 'Requested' }];
         
-        console.log(accept_dt_x);
-        console.log(accept_dt_info);
-        
-        if (accept_dt_x) {
-            lines.push({value: accept_dt_x, text: accept_dt_info});
+        if (memento_dt_x) {
+            lines.push({value: memento_dt_x, text: 'Base'});
         }
         
         scatter_chart = c3.generate({
@@ -236,19 +221,20 @@ function init_scatter(mem_data)
                 x: {
                     //show: true,
                     lines: lines,
-                }
+                },
+                front: true,
             },
 
             tooltip: {
                 grouped: true,
                 format: {
                     title: function (x) {
-                        if (x == 0) {
-                            return "Base Page: " + base_page_info;
-                        } else {
-                            return x_to_date_offset(x);
+                        //if (approx_eq(x, memento_dt_x)) {
+                        //    return "Base Page: " + base_page_info;
+                        //} else {
+                        return x_to_date_offset(x, true);
                             //return moment(date).from(curr_ts_moment);
-                        }
+                        //}
                     },
 
                     value: function (value, ratio, id, index) {
@@ -336,43 +322,43 @@ function format_diff(curr, base)
     return str;
 }
 
-function update_capture_info(secs, request_ts)
-{
-    if (!secs) {
-        return;
-    }
-    
-    var status_str;
-
-    if (!curr_request_moment.isValid() || curr_request_moment.isSame(curr_ts_moment)) {
-        status_str = "";
-    } else {
-        status_str = format_diff(curr_ts_moment, curr_request_moment);
-
-        status_str = status_str;
-        status_str += " " + format_ts(request_ts);
-        //status_str += request_moment.format("YYYY-MMM-DD HH:mm:ss") + "</b>";
-    }
-
-    var elem = document.getElementById("ts_info");
-
-    if (elem) {
-        elem.innerHTML = curr_moment.format("YYYY-MM-DD HH:mm:ss");
-    }
-
-    elem = document.getElementById("requested_info");
-    
-    if (!elem) {
-        return;
-    }
-
-    if (!request_ts) {
-        return;
-    }
-
-    elem.innerHTML = status_str;
-
-}
+//function update_capture_info(secs, request_ts)
+//{
+//    if (!secs) {
+//        return;
+//    }
+//    
+//    var status_str;
+//
+//    if (!curr_request_moment.isValid() || curr_request_moment.isSame(curr_ts_moment)) {
+//        status_str = "";
+//    } else {
+//        status_str = format_diff(curr_ts_moment, curr_request_moment);
+//
+//        status_str = status_str;
+//        status_str += " " + format_ts(request_ts);
+//        //status_str += request_moment.format("YYYY-MMM-DD HH:mm:ss") + "</b>";
+//    }
+//
+//    var elem = document.getElementById("ts_info");
+//
+//    if (elem) {
+//        elem.innerHTML = curr_moment.format("YYYY-MM-DD HH:mm:ss");
+//    }
+//
+//    elem = document.getElementById("requested_info");
+//    
+//    if (!elem) {
+//        return;
+//    }
+//
+//    if (!request_ts) {
+//        return;
+//    }
+//
+//    elem.innerHTML = status_str;
+//
+//}
 
 function update_banner(info, include_frames)
 {
@@ -388,19 +374,19 @@ function update_banner(info, include_frames)
             info.seconds = ts_to_date(info.timestamp).getTime() / 1000;
         }
         
-        var request_ms = ts_to_date(info.request_ts).getTime();
+        info.request_secs = ts_to_date(info.request_ts).getTime() / 1000;
         
-        curr_ts_sec = info.seconds;
+        curr_ts_sec = info.request_secs;
         curr_ts_moment = moment(curr_ts_sec * 1000);
         
-        accept_dt_x = log_scale((request_ms / 1000) - curr_ts_sec);
+        memento_dt_x = log_scale(info.seconds - info.request_secs);
+        console.log(memento_dt_x);
         
-        curr_request_moment = moment.utc(request_ms);
+        memento_dt_moment = moment.utc(info.seconds * 1000);
 
-        base_page_info = curr_ts_moment.utc().format("YYYY-MM-DD HH:mm:ss");
+        base_page_info = memento_dt_moment.utc().format("YYYY-MM-DD HH:mm:ss");
         
-        accept_dt_info = curr_request_moment.utc().format("YYYY-MM-DD HH:mm:ss");
-        
+        //memento_dt_info = curr_request_moment.utc().format("YYYY-MM-DD HH:mm:ss");
         //update_capture_info(info.seconds, info.request_ts);
 
         last_url = url;
@@ -489,11 +475,11 @@ function log_scale(diff)
     return scaler * result;
 }
 
-function x_to_date_offset(x)
+function x_to_date_offset(x, add_abs)
 {
-    if (x == 0) {
-        return base_page_info;
-    }
+    //if (approx_eq(x, memento_dt_x)) {
+     //   return base_page_info;
+    //}
 
     var scaler = 1;
     if (x < 0) {
@@ -504,7 +490,15 @@ function x_to_date_offset(x)
     var sec = Math.pow(10, x) - 1;
     sec = curr_ts_sec + (scaler * sec);
 
-    return format_diff(moment(sec * 1000), curr_ts_moment); 
+    var the_moment = moment(sec * 1000);
+    
+    var diff = format_diff(the_moment, curr_ts_moment);
+    
+    if (add_abs) {
+        diff += " at " + the_moment.utc().format("YYYY-MM-DD HH:mm:ss");
+    }
+    
+    return diff;
 }
 
 function update_charts(info, json) {

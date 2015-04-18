@@ -171,18 +171,18 @@ $(function() {
 });
 
 // api from wb.js
-if (window._wb_js) {
-    _wb_js.create_banner_element = function(banner_id)
-    {
-        if (updater_id) {
-            return;
-        }
-
-        if (document.readyState !== 'complete') {
-            updater_id = window.setInterval(update_while_loading, 2000);
-        }
-    }
-}
+//if (window._wb_js) {
+//    _wb_js.create_banner_element = function(banner_id)
+//    {
+//        if (updater_id) {
+//            return;
+//        }
+//
+//        if (document.readyState !== 'complete') {
+//            updater_id = window.setInterval(update_while_loading, 2000);
+//        }
+//    }
+//}
 
 // api from wb_frame.js
 // TODO: make this into an event
