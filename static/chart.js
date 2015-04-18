@@ -49,6 +49,7 @@ var COLOR_MAP =
 
      "MISSING": "#444",
     };
+
 //"#8c564b", "#c49c94", "#e377c2", "#f7b6d2", "#7f7f7f", "#c7c7c7", "#bcbd22", "#dbdb8d", "#17becf", "#9edae5"]
 
 function init_host_chart(memento_dict) {
@@ -229,12 +230,7 @@ function init_scatter(mem_data)
                 grouped: true,
                 format: {
                     title: function (x) {
-                        //if (approx_eq(x, memento_dt_x)) {
-                        //    return "Base Page: " + base_page_info;
-                        //} else {
                         return x_to_date_offset(x, true);
-                            //return moment(date).from(curr_ts_moment);
-                        //}
                     },
 
                     value: function (value, ratio, id, index) {
@@ -477,9 +473,9 @@ function log_scale(diff)
 
 function x_to_date_offset(x, add_abs)
 {
-    //if (approx_eq(x, memento_dt_x)) {
-     //   return base_page_info;
-    //}
+    if (x == 0) {
+        return base_page_info;
+    }
 
     var scaler = 1;
     if (x < 0) {
