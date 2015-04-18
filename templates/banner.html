@@ -4,11 +4,12 @@
   wbinfo.m_last = "{{ cdx.last }}";
   wbinfo.m_prev = "{{ cdx.prev }}";
   wbinfo.m_next = "{{ cdx.next }}";
-  
+ 
   window.addEventListener('beforeunload', function(event) {
     if (window.__orig_parent && window.__orig_parent.iframe_unloaded) {
       window.__orig_parent.iframe_unloaded();
     }
   });
 </script>
+<script src="/static/m/iframeResizer.contentWindow.js"></script>
 {% endif %}

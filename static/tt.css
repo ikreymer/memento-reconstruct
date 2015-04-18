@@ -42,12 +42,12 @@ html, body
 
     /*  position: absolute;*/
     border: 0px;
-    height: 110px;
+    height: 120px;
     transition: margin-top 1.0s;
     top: 0px;
 
     /*box-shadow: 0 5px 10px #777;*/
-    margin-bottom: 15px;
+    margin-bottom: 0px;
 }
 
 #mt_banner.closed
@@ -102,16 +102,19 @@ html, body
     line-height: 16px !important;
 }
 
-.host-chart-cont {
+/*.host-chart-cont {
     width: 29%;
     height: 100px;
     display: inline-block;
-}
+}*/
 
 .host-chart {
     width: 29%;
-    height: 104px; 
+    height: 130px; 
     display: inline-block;
+    padding: 0px;
+    border: 0px;
+    margin: -9px 0px 0px 0px;
     text-align: left;
     vertical-align: top;
 }

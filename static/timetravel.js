@@ -23,20 +23,20 @@
 function init_iframe_height() {
 
     var frame = document.getElementById("replay_iframe");
-    var iframe_div = document.getElementById("iframe_div");
+    //var iframe_div = document.getElementById("iframe_div");
     var frameHeight = frame.contentWindow.document.body.offsetHeight;
     var body = document.body,
             html = document.documentElement;
 
     var bodyHeight = Math.max( body.scrollHeight, body.offsetHeight, html.clientHeight, html.scrollHeight, html.offsetHeight );
-    bodyHeight = bodyHeight - 360;
+//    bodyHeight = bodyHeight - 360;
     if (frameHeight > bodyHeight) {
-        iframe_div.style.height = (360 + frameHeight) + 'px';
+        frame.style.height = (360 + frameHeight) + 'px';
     }
     else {
-        iframe_div.style.height = bodyHeight + "px";
+        frame.style.height = bodyHeight + "px";
     }
-    iframe_div.style.height = bodyHeight + "px";
+    frame.style.height = bodyHeight + "px";
 }
 
 function update_memento_ui(curr_state) {

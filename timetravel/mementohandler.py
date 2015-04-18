@@ -77,8 +77,7 @@ class MementoHandler(WBHandler):
             if wbrequest.referrer and wbrequest.referrer.startswith(wbrequest.wb_prefix):
                 wb_url = WbUrl(wbrequest.referrer[len(wbrequest.wb_prefix):])
 
-                # skip browser generaed .map files
-                if not wb_url.url.endswith('.map'):
+                if not self.skip_missing_count(wb_url):
                     page_key = redis_client.get_url_key(wb_url)
 
                     value = ('MISSING ' +
@@ -89,6 +88,18 @@ class MementoHandler(WBHandler):
 
 
             return self.handle_not_found(wbrequest, nfe)
+
+    def skip_missing_count(self, wb_url):
+        # skip browser generated .map files
+        if wb_url.url.endswith('.map'):
+            return True
+
+        # skip vi_ video info check, also client-generated
+        if wb_url.mod == 'vi_':
+            return True
+
+        return False
+
 
 #=============================================================================
 class RedirectTrackReplayView(ReplayView):

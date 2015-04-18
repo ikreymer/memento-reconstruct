@@ -38,6 +38,8 @@
 
         <script src="/static/m/timetravel.js"></script>
         <script src="/static/m/mementoutils.js"></script>
+        
+        <script src="/static/m/iframeResizer.js"></script>
     </head>
     <body>
         <div id="menu_top">
@@ -71,10 +73,10 @@
 <p id="requested_info"></p>
 </div>
 -->
-            <div id="hostchart" class="host-chart"></div>
             <div class="scatter-chart-cont">
                 <div id="scatterchart" class="scatter-chart"></div>
             </div>
+            <div id="hostchart" class="host-chart"></div>
         </div>
         <div id="scatterinfo" class="scatter-chart-info"></div>
         <script>
@@ -82,10 +84,9 @@
             init_moment_js();
         </script>
         <!--<a id="banner_toggle" href="#" onclick="toggle_banner()">&#10006;</a>-->
-        <div id="iframe_div">
             <iframe id="replay_iframe" src="{{ wbrequest.wb_prefix + embed_url }}" onload="iframe_loaded(event);" seamless="seamless" 
-                    frameborder="0" scrolling="no" class="wb_iframe"
-                    sandbox="allow-same-origin allow-forms allow-popups allow-scripts allow-pointer-lock"/>
-        </div>
+                    frameborder="0" scrolling="no" width="100%" height="100%"
+                    sandbox="allow-same-origin allow-forms allow-popups allow-scripts allow-pointer-lock"></iframe>
+            <script>iFrameResize({log:true, checkOrigin: false, enablePublicMethods: true, enableInPageLinks: true, heightCalculationMethod: "lowestElement"})               </script>
     </body>
 </html>
