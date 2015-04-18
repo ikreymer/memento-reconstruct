@@ -380,7 +380,7 @@ function update_banner(info, include_frames)
         
         memento_dt_moment = moment.utc(info.seconds * 1000);
 
-        base_page_info = memento_dt_moment.utc().format("YYYY-MM-DD HH:mm:ss");
+        base_page_info = curr_ts_moment.utc().format("YYYY-MM-DD HH:mm:ss");
         
         //memento_dt_info = curr_request_moment.utc().format("YYYY-MM-DD HH:mm:ss");
         //update_capture_info(info.seconds, info.request_ts);
