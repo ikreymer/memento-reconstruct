@@ -333,31 +333,6 @@ function update_banner(info, include_frames)
 
     update_capture_info(info.seconds, info.request_ts);
 
-    function update_mem_link(name, backup_name)
-    {
-      var m_elem = document.getElementById("m_" + name);
-      if (!m_elem) {
-        return;
-      }
-      var val = info["m_" + name];
-
-      if (!val && backup_name) {
-        val = info["m_" + backup_name];
-      }
-
-      if (!val) {
-        m_elem.classList.add("hidden");      
-      } else {
-        m_elem.classList.remove("hidden");
-      }
-      m_elem.setAttribute("href", wbinfo.prefix + val + "/" + info.url);
-    }
-
-    update_mem_link("first", "prev");
-    update_mem_link("prev", "first");
-    update_mem_link("next", "last");
-    update_mem_link("last", "next");
-
     last_url = url;
     last_timestamp = timestamp;
     last_mem_length = 0;
@@ -368,13 +343,15 @@ function update_banner(info, include_frames)
 
 function load_all(include_frames)
 {
+  var replay_frame = document.getElementById("replay_iframe").contentWindow;
+    
   // make list of all frames
   var frame_list = [];
 
   if (include_frames) {
-    walk_frames(window.frames[1], frame_list);
+    walk_frames(replay_frame, frame_list);
   } else {
-    frame_list.push(window.frames[1].location.href);
+    frame_list.push(replay_frame.location.href);
   }
 
   //console.log(JSON.stringify(frame_list));
@@ -383,7 +360,7 @@ function load_all(include_frames)
 
   var all_mems = undefined;
 
-  var curr_frame_url = window.frames[1].location.href;
+  var curr_frame_url = replay_frame.location.href;
 
   for (var i = 0; i < frame_list.length; i++) {
     var url = frame_list[i].replace("/replay/", "/api/");
@@ -400,7 +377,7 @@ function load_all(include_frames)
 
       if (counter >= frame_list.length) {
         // ensure still on same page
-        if (window.frames[1].location.href == curr_frame_url) {
+        if (replay_frame.location.href == curr_frame_url) {
           update_charts(all_mems);
         }
       } 
@@ -572,29 +549,6 @@ function update_charts(json) {
   }
 }
 
-if (window._wb_js) {
-  _wb_js.create_banner_element = function(banner_id)
-  {
-    if (updater_id) {
-      return;
-    }
-
-    if (document.readyState !== 'complete') {
-      updater_id = window.setInterval(update_while_loading, 2000);
-    }
-
-    window.set_state = function(state) {
-      curr_state = state;
-      do_update(true);
-
-      if (window.frames[0].document && 
-          window.frames[0].document.readyState === 'complete') {
-        stop_anim();
-      }
-    }
-  }
-}
-
 function stop_anim()
 {
   var elem = document.getElementById("icon");
@@ -625,16 +579,16 @@ function update_while_loading()
     stop_anim();
     // don't call do_update, that's called by eventlistener
   } else {
-    do_update(false);
+    do_update(document.getElementById("replay_iframe").contentWindow, false);
   }
 }
 
-function do_update(include_frames)
+function do_update(replay_frame, include_frames)
 {
   var info;
 
-  if (window.frames[0].wbinfo) {
-    info = window.frames[0].wbinfo;
+  if (replay_frame && replay_frame.wbinfo) {
+    info = replay_frame.wbinfo;
   } else {
     info = {}
     info.url = curr_state.url;

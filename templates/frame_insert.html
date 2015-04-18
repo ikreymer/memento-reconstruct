@@ -17,10 +17,9 @@
         <!-- Timetravel UI -->
         <link rel="stylesheet" href="/static/m/jquery-ui-1.10.4.min.css">
         <link rel="stylesheet" href="/static/m/timetravel.css">
+
         <script src="/static/m/jquery-1.10.2.js"></script>
         <script src="/static/m/jquery-ui-1.10.4.min.js"></script>
-        <script src="/static/m/timetravel.js"></script>
-        <script src="/static/m/mementoutils.js"></script>
 
         <script src='{{ wbrequest.host_prefix }}/{{ static_path }}/wb.js'> </script>
 
@@ -33,9 +32,12 @@
 
         <script src="/static/m/moment.min.js"></script>
 
+        <script src='/static/__pywb/wb_frame.js'></script>
+
         <script src="/static/m/chart.js"></script>
 
-        <script src='{{ wbrequest.host_prefix }}/{{ static_path }}/wb_frame.js'></script>
+        <script src="/static/m/timetravel.js"></script>
+        <script src="/static/m/mementoutils.js"></script>
     </head>
     <body>
         <div id="menu_top">
@@ -48,22 +50,27 @@
             <input type="text" id="timepicker" class='result_input ui-corner-all' title='HH:mm:ss' />
             <button id='search' name='search'>Find</button>
             <button id='reconstruct' name='reconstruct'>Reconstruct</button>
-            <span id='memento_info'>          <a id='prev_memento' href='' title='Previous: ' class='memento_buttons ui-state-default ui-corner-all'></a>          <span id='this_memento' title='Current: 07 Feb 2014 00:01:00 GMT' class='this_memento ui-state-default ui-corner-all'></span>          <a id='next_memento' href='' title='Next: ' class='memento_buttons ui-state-default ui-corner-all'>          </a>    </span>
+            <span id='memento_info'>
+                <a id='prev_memento' href='#' title='' class='memento_buttons ui-state-default ui-corner-all'></a>
+                <span id='this_memento' title='' class='this_memento ui-state-default ui-corner-all'></span>
+                <a id='next_memento' href='#' title='' class='memento_buttons ui-state-default ui-corner-all'>
+                </a>   
+            </span>
         </div>
         <div id="mt_banner">
             <!--
-            <div class="mem-nav">
-                <p>
-                <a id="m_first" href="">&#9664;&#9664;</a>&nbsp;
-                <a id="m_prev" href="">&#9664;</a>&nbsp;
-                <a title="Powered By Memento and pywb" href="http://mementoweb.org/about/"><img id="icon" src="/static/m/memento_logo.svg" class="icon rotate"/></a>&nbsp;
-                <a id="m_next" href="">&#9654;</a>&nbsp;
-                <a id="m_last" href="">&#9654;&#9654;</a>
-                </p>
-                <p id="ts_info"></p>
-                <p id="requested_info"></p>
-            </div>
-            -->
+<div class="mem-nav">
+<p>
+<a id="m_first" href="">&#9664;&#9664;</a>&nbsp;
+<a id="m_prev" href="">&#9664;</a>&nbsp;
+<a title="Powered By Memento and pywb" href="http://mementoweb.org/about/"><img id="icon" src="/static/m/memento_logo.svg" class="icon rotate"/></a>&nbsp;
+<a id="m_next" href="">&#9654;</a>&nbsp;
+<a id="m_last" href="">&#9654;&#9654;</a>
+</p>
+<p id="ts_info"></p>
+<p id="requested_info"></p>
+</div>
+-->
             <div id="hostchart" class="host-chart"></div>
             <div class="scatter-chart-cont">
                 <div id="scatterchart" class="scatter-chart"></div>
@@ -76,9 +83,9 @@
         </script>
         <!--<a id="banner_toggle" href="#" onclick="toggle_banner()">&#10006;</a>-->
         <div id="iframe_div">
-            <iframe src="{{ wbrequest.wb_prefix + embed_url }}" onload="multiverse_frame_loaded(event);" seamless="seamless" 
-                frameborder="0" scrolling="no" class="wb_iframe"
-                sandbox="allow-same-origin allow-forms allow-popups allow-scripts allow-pointer-lock"/>
-            </div>
-        </body>
-    </html>
+            <iframe id="replay_iframe" src="{{ wbrequest.wb_prefix + embed_url }}" onload="iframe_loaded(event);" seamless="seamless" 
+                    frameborder="0" scrolling="no" class="wb_iframe"
+                    sandbox="allow-same-origin allow-forms allow-popups allow-scripts allow-pointer-lock"/>
+        </div>
+    </body>
+</html>

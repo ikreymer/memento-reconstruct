@@ -23,10 +23,10 @@ html, body
     position: absolute;
     top: 120px;
      */
-bottom: 0px;
-width: 100%;
-/*height: 100%;*/
-transition: top 1.0s;
+    bottom: 0px;
+    width: 100%;
+    /*height: 100%;*/
+    transition: top 1.0s;
 }
 
 #iframe_div.closed
@@ -110,7 +110,7 @@ transition: top 1.0s;
 
 .host-chart {
     width: 29%;
-    height: 80px;
+    height: 104px; 
     display: inline-block;
     text-align: left;
     vertical-align: top;
@@ -125,6 +125,7 @@ transition: top 1.0s;
 .scatter-chart {
     width: 100%;
     height: 80px;
+    height: 100%;
     display: inline-block;
 }
 
