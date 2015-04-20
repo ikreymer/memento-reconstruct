@@ -20,6 +20,20 @@ var last_url = undefined;
 var last_timestamp = undefined;
 var last_mem_length = 0;
 
+function cdx_json_to_host_agg(cdx_json) {
+    var urls = {};
+
+    for (var i = 0; i < cdx_json.length; i++) {
+        var host = cdx_json[i].host;
+        if (urls[host] != undefined) {
+            urls[host]++;
+        } else {
+            urls[host] = 0;
+        }
+    }
+    return {urls: urls};
+}
+
 function approx_eq(a, b)
 {
     return Math.abs(a - b) < 0.0001;
