@@ -257,6 +257,8 @@ class MementoIndexServer(object):
 
     def memento_to_cdx(self, url, mem_iter, limit, skip_exclude=True):
         key = canonicalize(url)
+        if url.endswith('/'):
+            key += '/'
 
         for mems, _ in itertools.izip(mem_iter, xrange(0, limit)):
 

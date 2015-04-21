@@ -82,7 +82,7 @@ class MementoHandler(WBHandler):
 
                     value = ('MISSING ' +
                               wbrequest.wb_url.timestamp + ' ' +
-                              wbrequest.wb_url.url.rstrip('/'))
+                              wbrequest.wb_url.url)
 
                     redis_client.set_embed_entry(page_key, value, '0')
 
@@ -224,7 +224,7 @@ class LiveDirectLoader(object):
 
         value = (parts.netloc + ' ' +
                  wbrequest.wb_url.timestamp + ' ' +
-                 wbrequest.wb_url.url.rstrip('/'))
+                 wbrequest.wb_url.url)
 
         redis_client.set_embed_entry(page_key, value, str(cdx['sec']) + ' ' + content_type)
 
