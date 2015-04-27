@@ -7,7 +7,7 @@ collections:
     '':
         index_paths:
             - http://timetravel.mementoweb.org/api/json/
-            - http://timetravel.mementoweb.org/timemap/json/
+            - http://labs.mementoweb.org/timemap/json/
 
         server_cls: !!python/name:timetravel.mementoquery.MementoIndexServer
 

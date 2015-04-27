@@ -27,7 +27,7 @@ var cdx_json = {{ cdx_json | safe }};
 
 <script src="/static/m/d3.v3.min.js"> </script>
 <script src="/static/m/c3.min.js"> </script>
-<link href="/static/m/c3.css" rel="stylesheet"/>
+<link href="/static/m/c3.min.css" rel="stylesheet"/>
 
 <script src="/static/m/chart.js"> </script>
 
@@ -78,7 +78,7 @@ var cdx_json = {{ cdx_json | safe }};
   <div id='hostchart' style="display: inline-block; vertical-align: top; width: 500px; height: 500px">
   <svg></svg>
   </div>
-  <script>init_host_chart(cdx_json_to_host_agg(cdx_json));</script>
+  <script>init_host_chart(cdx_json_to_host_agg(cdx_json), "pie");</script>
 
   {% else %}
   <i>No captures found for <b>{{ url }}</b></i>

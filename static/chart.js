@@ -73,7 +73,7 @@ var COLOR_MAP =
 
 //, "#c49c94", "#e377c2", "#f7b6d2", "#7f7f7f", "#c7c7c7", , "#dbdb8d", "#17becf", "#9edae5"]
 
-function init_host_chart(memento_dict) {
+function init_host_chart(memento_dict, charttype) {
     var names = {};
     var cols = [];
     var len = 0;
@@ -97,13 +97,15 @@ function init_host_chart(memento_dict) {
     //  console.log(JSON.stringify(cols));
     //  console.log(JSON.stringify(names));
 
+    charttype = charttype || "bar";
+
     var data = {
         columns: cols,
         names: names,
 
         colors: COLOR_MAP,
 
-        type: 'bar',
+        type: charttype,
         
         groups: [groups],
     };
