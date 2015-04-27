@@ -63,11 +63,15 @@ var COLOR_MAP =
      "webarchive.loc.gov": "#8c564b",
      
      "webarchive.nationalarchives.gov.uk": "#e377c2",
+     
+     "mementoarchive.lanl.gov": "#bcbd22",
+     
+     "mementoarchive.cs.odu.edu": "#8c564b",
 
      "MISSING": "#444",
     };
 
-//"#8c564b", "#c49c94", "#e377c2", "#f7b6d2", "#7f7f7f", "#c7c7c7", "#bcbd22", "#dbdb8d", "#17becf", "#9edae5"]
+//, "#c49c94", "#e377c2", "#f7b6d2", "#7f7f7f", "#c7c7c7", , "#dbdb8d", "#17becf", "#9edae5"]
 
 function init_host_chart(memento_dict) {
     var names = {};

@@ -1,3 +1,3 @@
 redis
-pywb>=0.9.6
+pywb>=0.9.7
 uwsgi>=2.0

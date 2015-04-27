@@ -17,7 +17,7 @@ collections:
             client:
                 skip_postmessage: true
 
-        cookie_scope: exact
+        cookie_scope: removeall
         #fallback: live
 
     #live:
