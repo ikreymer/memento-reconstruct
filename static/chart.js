@@ -444,7 +444,11 @@ function load_all(info, include_frames)
     var curr_frame_url = replay_frame.location.href;
 
     for (var i = 0; i < frame_url_list.length; i++) {
-        var url = frame_url_list[i].replace("/replay/", "/api/");
+        //var url = frame_url_list[i].replace("/replay/", "/api/");
+        // find beginning of path
+        var inx = window.location.href.indexOf(window.location.pathname);
+        var url = window.location.href.slice(0, inx) + "/api" + window.location.href.slice(inx);
+
         d3.json(url, function(error, json) {
             counter++;
 

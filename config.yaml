@@ -4,7 +4,7 @@ static_routes:
 
 
 collections:
-    replay:
+    '':
         index_paths:
             - http://timetravel.mementoweb.org/api/json/
             - http://timetravel.mementoweb.org/timemap/json/
