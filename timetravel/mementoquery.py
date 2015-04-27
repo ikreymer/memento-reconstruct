@@ -70,7 +70,13 @@ class MementoJsonApi(object):
 
             raise NotFoundException(msg, url=url)
 
-        return result['mementos']
+        mementos = result.get('mementos')
+        # if got timemap_index, just cached the timemap, so need to query again
+        # TODO: revisit this..
+        if not mementos and result.get('timemap_index'):
+            return self.timemap_query(url, closest)
+
+        return mementos
 
     def parse_mem_value(self, m):
         iso = m['datetime']
