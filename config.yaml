@@ -29,20 +29,7 @@ collections:
         wb_handler_class: !!python/name:timetravel.mementohandler.APIHandler
 
 
-
-#query_html: /home/web/multiverse/templates/query.html
-
-#banner_html: /home/web/multiverse/templates/banner.html
-
-#error_html: /home/web/multiverse/templates/error.html
-
-#home_html: /home/web/multiverse/templates/index.html
-
-#search_html: /home/web/multiverse/templates/index.html
-
-#not_found_html: /home/web/multiverse/templates/not_found.html
-
-#frame_insert_html: /home/web/multiverse/templates/frame_insert.html
+memento_xml: 'http://labs.mementoweb.org/aggregator_config/archivelist.xml'
 
 redir_to_exact: false
 
