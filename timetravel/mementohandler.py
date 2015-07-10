@@ -131,7 +131,7 @@ class LiveDirectLoader(object):
         # init redis here only
         redis_client.init_redis(config)
 
-        self.load_archive_info_xml(config.get('memento_xml'))
+        self.load_archive_info_xml(config.get('memento_archive_xml'))
 
     def load_archive_info_xml(self, url):
         self.archive_infos = {}
@@ -314,9 +314,10 @@ class ReUrlRewriter(UrlRewriter):
         info = self.rewrite_opts.get('archive_info')
 
         # if archive info exists, and unrewrtten api exists,
-        # use add an extra check for unrewriting locations
-        # but otherwise use as is
-        if info and info['rewritten'] and info['unrewritten_url']:
+        # or archive is not rewritten, use as is
+        # (but add regex check for rewritten urls just in case, as they
+        # may pop up in Location headers)
+        if info and (info['unrewritten_url'] or not info['rewritten']):
             m = WBURL_RX.match(url)
             if m:
                 if not mod:
@@ -325,6 +326,7 @@ class ReUrlRewriter(UrlRewriter):
             else:
                 return super(ReUrlRewriter, self).rewrite(url, mod)
 
+        # Use HEAD request to get original url
         else:
            # don't rewrite certain urls at all
             if not url.startswith(self.NO_REWRITE_URI_PREFIX):
