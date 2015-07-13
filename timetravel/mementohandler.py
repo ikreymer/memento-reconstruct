@@ -1,5 +1,6 @@
 from pywb.webapp.handlers import WBHandler
 from pywb.utils.statusandheaders import StatusAndHeaders
+from pywb.utils.loaders import BlockLoader
 from pywb.webapp.replay_views import ReplayView, CaptureException
 
 from pywb.rewrite.wburl import WbUrl
@@ -18,11 +19,15 @@ import json
 import os
 
 import urlparse
+import xml.etree.ElementTree as ElementTree
+
 
 #=============================================================================
 WBURL_RX = re.compile('(.*/)([0-9]{1,14})(\w{2}_)?(/https?://.*)')
 
 H_TARGET_SEC = '_target_sec'
+
+EXTRACT_ORIG_LINK = re.compile(r'<([^>]+)>;\s*rel=\"original\"')
 
 
 #=============================================================================
@@ -126,6 +131,47 @@ class LiveDirectLoader(object):
         # init redis here only
         redis_client.init_redis(config)
 
+        self.load_archive_info_xml(config.get('memento_archive_xml'))
+
+    def load_archive_info_xml(self, url):
+        self.archive_infos = {}
+        logging.debug('Loading XML from {0}'.format(url))
+        if not url:
+            return
+
+        try:
+            stream = BlockLoader().load(url)
+        except Exception as e:
+            logging.debug(e)
+            logging.debug('Proceeding without xml archive info')
+            return
+
+        root = ElementTree.fromstring(stream.read())
+
+        for link in root.iter('link'):
+            name = link.get('id')
+            archive = link.find('archive')
+            timegate = link.find('timegate')
+
+            if timegate is None or archive is None:
+                continue
+
+            rewritten = (archive.get('rewritten-urls') == 'yes')
+            unrewritten_url = archive.get('un-rewritten-api-url', '')
+            uri = timegate.get('uri')
+
+            self.archive_infos[name] = {'uri': uri,
+                                        'rewritten': rewritten,
+                                        'unrewritten_url': unrewritten_url
+                                       }
+
+    def find_archive_info(self, host):
+        for name, info in self.archive_infos.iteritems():
+            if host in info['uri']:
+                return info
+        return None
+
+
     def is_embed_ref(self, url):
         """ Is this url an embedded referrer
         So far, it seems .css files are embeds that are also referrers
@@ -168,12 +214,26 @@ class LiveDirectLoader(object):
         if archive_host in skip_hosts:
             raise CaptureException('Skipping already failed: ' + archive_host)
 
-        src_url_id = WBURL_RX.sub(r'\1\2id_\4', src_url)
+        #src_url_id = WBURL_RX.sub(r'\1\2id_\4', src_url)
 
-        if src_url_id != src_url:
-            try_urls = [src_url_id, src_url]
+        #if src_url_id != src_url:
+        #    try_urls = [src_url_id, src_url]
+        #else:
+        #    try_urls = [src_url]
+
+        info = self.find_archive_info(archive_host)
+
+        if info and info['unrewritten_url']:
+            orig_url = info['unrewritten_url'].format(timestamp=cdx['timestamp'],
+                                                      url=cdx['url'])
+            try_urls = [orig_url]
         else:
             try_urls = [src_url]
+
+        wbrequest.urlrewriter.rewrite_opts['orig_src_url'] = cdx['src_url']
+        wbrequest.urlrewriter.rewrite_opts['archive_info'] = info
+
+        self.session.cookies.clear()
 
         response = self._do_req(try_urls, archive_host, skip_hosts)
 
@@ -246,14 +306,54 @@ class LiveDirectLoader(object):
 
 #=============================================================================
 class ReUrlRewriter(UrlRewriter):
+    def __init__(self, *args, **kwargs):
+        self.session = None
+        super(ReUrlRewriter, self).__init__(*args, **kwargs)
+
     def rewrite(self, url, mod=None):
-        m = WBURL_RX.match(url)
-        if m:
-            if not mod:
-                mod = self.wburl.mod
-            return self.prefix + m.group(2) + mod + m.group(4)
+        info = self.rewrite_opts.get('archive_info')
+
+        # if archive info exists, and unrewrtten api exists,
+        # or archive is not rewritten, use as is
+        # (but add regex check for rewritten urls just in case, as they
+        # may pop up in Location headers)
+        if info and (info['unrewritten_url'] or not info['rewritten']):
+            m = WBURL_RX.match(url)
+            if m:
+                if not mod:
+                    mod = self.wburl.mod
+                return self.prefix + m.group(2) + mod + m.group(4)
+            else:
+                return super(ReUrlRewriter, self).rewrite(url, mod)
+
+        # Use HEAD request to get original url
         else:
+           # don't rewrite certain urls at all
+            if not url.startswith(self.NO_REWRITE_URI_PREFIX):
+                url = self.urljoin(self.rewrite_opts.get('orig_src_url'), url)
+                url = self.head_memento_orig(url)
+
             return super(ReUrlRewriter, self).rewrite(url, mod)
+
+    def head_memento_orig(self, url):
+        try:
+            if not self.session:
+                self.session = requests.Session()
+
+            logging.debug('Loading HEAD Memento Headers from ' + url)
+            r = self.session.head(url)
+            link = r.headers.get('Link')
+            if link:
+                m = EXTRACT_ORIG_LINK.search(link)
+                if m:
+                    url = m.group(1)
+                    logging.debug('Found Original: ' + url)
+
+        except Exception as e:
+            logging.debug(e)
+
+        finally:
+            return url
 
     def _create_rebased_rewriter(self, new_wburl, prefix):
         return ReUrlRewriter(new_wburl, prefix)
