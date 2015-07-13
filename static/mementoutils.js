@@ -320,8 +320,8 @@ function reloadPage(machineDate, service) {
     if (service == "list") {
         loc = "http://timetravel.mementoweb.org/list/";
     }
-    else if (service == "replay") {
-        loc = "http://multiverse.mementodepot.org/replay/";
+    else if (service == "reconstruct") {
+        loc = "http://timetravel.mementoweb.org/reconstruct/";
     }
 
     loc = loc + machineDate + "/" + reqUrl;

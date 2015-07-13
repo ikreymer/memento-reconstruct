@@ -91,7 +91,7 @@ function update_memento_ui(curr_state) {
         var date = $("#datepicker").val();
         date += "T" + $("#timepicker").val() + "Z";
         var d = convertToDate(date);
-        reloadPage(getMachineDate(d), "replay");
+        reloadPage(getMachineDate(d), "reconstruct");
     });
     $("#summary").center();
     
@@ -165,8 +165,18 @@ function update_memento_ui(curr_state) {
 
 };
 
+var loadingAnimation = 0;
+
+function loadAnimation() {
+    var i = 0;
+    return setInterval(function() {
+        i = ++i %7;
+        $("#scatterinfo").html(Array(i+1).join("-") + " Reconstructing the page " + Array(i+1).join("-"));
+    }, 800);
+}
 
 $(function() {
+    loadingAnimation = loadAnimation();
     update_memento_ui();
 });
 

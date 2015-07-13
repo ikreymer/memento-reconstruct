@@ -647,6 +647,9 @@ function update_charts(info, json) {
         status = status.replace("{hosts}", num_hosts);
     }
 
+    if (loadingAnimation != undefined) {
+        clearInterval(loadingAnimation);
+    }
     if (meminfo_elem) {
         meminfo_elem.innerHTML = status;
     }

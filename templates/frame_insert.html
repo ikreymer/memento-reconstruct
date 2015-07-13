@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html>
     <head>
+        <meta name="viewport" content="" />
+        <meta charset="utf-8" />
         <script>
             wbinfo = {}
             wbinfo.prefix = "{{ wbrequest.wb_prefix }}";
@@ -13,37 +15,39 @@
             wbinfo.seconds = {{ wbrequest.wb_url.timestamp | format_ts('%s') }};
             {% endif %}
         </script>
+        <link rel="icon" type="image/png" href="http://mementoweb.org/static/css/images/timetravel_logo_20x20.png">
 
         <!-- Timetravel UI -->
-        <link rel="stylesheet" href="/static/m/jquery-ui-1.10.4.min.css">
-        <link rel="stylesheet" href="/static/m/timetravel.css">
+        <link rel="stylesheet" href="{{ wbrequest.host_prefix }}/static/m/jquery-ui-1.10.4.min.css">
+        <link rel="stylesheet" href="{{ wbrequest.host_prefix }}/static/m/timetravel.css">
 
-        <script src="/static/m/jquery-1.10.2.js"></script>
-        <script src="/static/m/jquery-ui-1.10.4.min.js"></script>
+        <script src="{{ wbrequest.host_prefix }}/static/m/jquery-1.10.2.js"></script>
+        <script src="{{ wbrequest.host_prefix }}/static/m/jquery-ui-1.10.4.min.js"></script>
 
         <script src='{{ wbrequest.host_prefix }}/{{ static_path }}/wb.js'> </script>
 
-        <script src="/static/m/d3.v3.min.js"></script>
+        <script src="{{ wbrequest.host_prefix }}/static/m/d3.v3.min.js"></script>
 
-        <script src="/static/m/c3.min.js"></script>
-        <link href="/static/m/c3.min.css" rel="stylesheet" type="text/css">
+        <script src="{{ wbrequest.host_prefix }}/static/m/c3.min.js"></script>
+        <link href="{{ wbrequest.host_prefix }}/static/m/c3.min.css" rel="stylesheet" type="text/css">
 
-        <link href="/static/m/tt.css" rel="stylesheet" type="text/css">
+        <link href="{{ wbrequest.host_prefix }}/static/m/tt.css" rel="stylesheet" type="text/css">
 
-        <script src="/static/m/moment.min.js"></script>
+        <script src="{{ wbrequest.host_prefix }}/static/m/moment.min.js"></script>
 
-        <script src='/static/__pywb/wb_frame.js'></script>
+        <script src='{{ wbrequest.host_prefix }}/static/__pywb/wb_frame.js'></script>
 
-        <script src="/static/m/chart.js"></script>
+        <script src="{{ wbrequest.host_prefix }}/static/m/chart.js"></script>
 
-        <script src="/static/m/timetravel.js"></script>
-        <script src="/static/m/mementoutils.js"></script>
+        <script src="{{ wbrequest.host_prefix }}/static/m/timetravel.js"></script>
+        <script src="{{ wbrequest.host_prefix }}/static/m/mementoutils.js"></script>
         
-        <script src="/static/m/iframeResizer.js"></script>
+        <script src="{{ wbrequest.host_prefix }}/static/m/iframeResizer.js"></script>
+        <title>Reconstruction of {{ url }} -- Memento Time Travel</title>
     </head>
     <body>
         <div id="menu_top">
-            <iframe id="menu_top_frame" src="/static/m/menu_top_tt.html" style="border:0;width:980px;height:102px;"></iframe>
+            <iframe id="menu_top_frame" src="{{ wbrequest.host_prefix }}/static/m/menu_top_tt.html" style="border:0;width:980px;height:102px;"></iframe>
         </div>
         <div id='header'>
             <input type="text" id="url" class='ui-corner-all result_input' value='http://' title='Enter URL for Time Travel.' />

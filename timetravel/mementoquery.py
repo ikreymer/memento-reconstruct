@@ -38,6 +38,7 @@ class MementoJsonApi(object):
         self.session = requests.Session()
 
     def timegate_query(self, timestamp, url):
+        print url
         url = urllib.quote(url, ':/')
         full = self.api_endpoint + timestamp + '/' + url
         try:
