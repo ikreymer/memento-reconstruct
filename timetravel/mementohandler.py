@@ -148,7 +148,7 @@ class LiveDirectLoader(object):
 
         root = ElementTree.fromstring(stream.read())
 
-        for link in root.iter('link'):
+        for link in root.findall('link'):
             name = link.get('id')
             archive = link.find('archive')
             timegate = link.find('timegate')

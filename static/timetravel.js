@@ -1,24 +1,19 @@
-//var mementoDatetime = "2010-03-14"
-//var acceptDatetime = wbinfo.timestamp;
-//var requestUrl = wbinfo.capture_url;
-
-//function multiverse_frame_loaded(event) {    
-//    var frame = document.getElementsByClassName("wb_iframe")[0];
-//    var iframe_div = document.getElementById("iframe_div");
-//    var frameHeight = frame.contentWindow.document.body.offsetHeight;
-//    var body = document.body,
-//            html = document.documentElement;
-//
-//    var bodyHeight = Math.max( body.scrollHeight, body.offsetHeight, html.clientHeight, html.scrollHeight, html.offsetHeight );
-//    bodyHeight = bodyHeight - 360;
-//    if (frameHeight > bodyHeight) {
-//        iframe_div.style.height = (360 + frameHeight) + 'px';
-//    }
-//    else {
-//        iframe_div.style.height = bodyHeight + "px";
-//    }
-//    iframe_loaded(event);
-//}
+/**
+ * This file is part of the extension Memento for Chrome.
+ * http://mementoweb.org
+ * Copyright 2015,
+ * Harihar Shankar, Herbert Van de Sompel, Lyudmila Balakireva
+ * -- Los Alamos National Laboratory. 
+ * Licensed under the BSD open source software license.
+ * You may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * http://mementoweb.github.io/SiteStory/license.html
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 function init_iframe_height() {
 
