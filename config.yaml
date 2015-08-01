@@ -14,15 +14,15 @@ collections:
         wb_handler_class: !!python/name:timetravel.mementohandler.MementoHandler
         rewrite_opts:
             punycode_only_links: true
-            client:
-                skip_postmessage: true
+            #client:
+            #    skip_postmessage: true
 
         cookie_scope: removeall
-        #fallback: live
+        fallback: live
 
-    #live:
-    #    index_paths: $liveweb
-    #    cookie_scope: root
+    'live':
+        index_paths: $liveweb
+        cookie_scope: host
 
     'reconstruct-api':
         index_paths: $liveweb

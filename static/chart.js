@@ -69,6 +69,8 @@ var COLOR_MAP =
      "mementoarchive.cs.odu.edu": "#8c564b",
 
      "MISSING": "#444",
+
+     "LIVE": "#46C646",
     };
 
 //, "#c49c94", "#e377c2", "#f7b6d2", "#7f7f7f", "#c7c7c7", , "#dbdb8d", "#17becf", "#9edae5"]

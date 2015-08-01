@@ -81,7 +81,7 @@ class RedisClient(object):
     @staticmethod
     def get_url_key_p(ts, url):
         key = ts + '/' + canonicalize(url, False)
-        if url.endswith('/'):
+        if not url.endswith('/'):
             key += '/'
         return key
 

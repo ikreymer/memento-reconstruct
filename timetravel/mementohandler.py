@@ -1,6 +1,7 @@
 from pywb.webapp.handlers import WBHandler
 from pywb.utils.statusandheaders import StatusAndHeaders
 from pywb.utils.loaders import BlockLoader
+from pywb.utils.timeutils import timestamp_to_sec, timestamp_now
 from pywb.webapp.replay_views import ReplayView, CaptureException
 
 from pywb.rewrite.wburl import WbUrl
@@ -75,24 +76,41 @@ class MementoHandler(WBHandler):
                                                    offset=offset,
                                                    cdx_json=cdx_json)
 
-    def handle_request(self, wbrequest):
-        try:
-            return super(MementoHandler, self).handle_request(wbrequest)
-        except NotFoundException as nfe:
-            if wbrequest.referrer and wbrequest.referrer.startswith(wbrequest.wb_prefix):
-                wb_url = WbUrl(wbrequest.referrer[len(wbrequest.wb_prefix):])
+    def handle_not_found(self, wbrequest, nfe):
+        response = super(MementoHandler, self).handle_not_found(wbrequest, nfe)
 
-                if not self.skip_missing_count(wb_url):
-                    page_key = redis_client.get_url_key(wb_url)
+        if (not wbrequest.wb_url.is_query() and
+            wbrequest.referrer and
+            wbrequest.referrer.startswith(wbrequest.wb_prefix)):
 
-                    value = ('MISSING ' +
-                              wbrequest.wb_url.timestamp + ' ' +
-                              wbrequest.wb_url.url)
+            wb_url = WbUrl(wbrequest.referrer[len(wbrequest.wb_prefix):])
 
-                    redis_client.set_embed_entry(page_key, value, '0')
+            status = response.status_headers.get_statuscode()
 
+            if status.startswith('4') and not self.skip_missing_count(wb_url):
+                key_name = 'MISSING '
+            elif status.startswith('2'):
+                key_name = 'LIVE '
+            else:
+                key_name = None
 
-            return self.handle_not_found(wbrequest, nfe)
+            if key_name:
+                page_key = redis_client.get_url_key(wb_url)
+
+                ts = wbrequest.wb_url.timestamp
+                if not ts:
+                    ts = timestamp_now()
+
+                value = (key_name + ts + ' ' +
+                          wbrequest.wb_url.url)
+
+                save_value = str(timestamp_to_sec(ts))
+                save_value += ' ' + 'text/html'
+
+                redis_client.set_embed_entry(page_key, value, save_value)
+
+        return response
+
 
     def skip_missing_count(self, wb_url):
         # skip browser generated .map files

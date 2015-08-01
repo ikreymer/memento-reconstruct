@@ -338,7 +338,8 @@ function reloadPage(machineDate, service) {
         loc = "http://timetravel.mementoweb.org/list/";
     }
     else if (service == "reconstruct") {
-        loc = "http://timetravel.mementoweb.org/reconstruct/";
+        //loc = "http://timetravel.mementoweb.org/reconstruct/";
+        loc = window.location.origin + "/reconstruct/";
     }
 
     loc = loc + machineDate + "/" + reqUrl;
