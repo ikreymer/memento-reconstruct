@@ -24,7 +24,7 @@ collections:
     #    index_paths: $liveweb
     #    cookie_scope: root
 
-    api:
+    'reconstruct-api':
         index_paths: $liveweb
         wb_handler_class: !!python/name:timetravel.mementohandler.APIHandler
 

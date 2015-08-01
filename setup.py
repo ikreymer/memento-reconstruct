@@ -18,20 +18,20 @@ class PyTest(TestCommand):
         sys.exit(errcode)
 
 setup(
-    name='pywb-timetravel',
-    version='1.2.0',
+    name='memento-reconstruct',
+    version='1.3.0',
 #    url='https://github.com/ikreymer/pywb-timetravel',
     author='Ilya Kreymer',
     author_email='ikreymer@gmail.com',
-    license='GPL',
+    license='AGPL',
     packages=find_packages(),
-    description='timetravel across archives!',
-    long_description='timetravel across archives!',
+    description='Aggregate Wayback Machine!',
+    long_description='Aggregate Wayback Machine!',
     provides=[
         'timetravel',
         ],
     install_requires=[
-        'pywb>=0.9.2',
+        'pywb>=0.10.5',
         ],
     dependency_links=[
 #        "git+git://github.com/ikreymer/pywb.git@develop#egg=pywb-0.8.0"

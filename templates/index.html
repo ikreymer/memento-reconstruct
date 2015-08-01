@@ -15,9 +15,9 @@
         }
 
         if (ts != '') {
-          url = "/replay/" + ts + "/" + url;
+          url = "/reconstruct/" + ts + "/" + url;
         } else {
-          url = "/replay/" + url;
+          url = "/reconstruct/" + url;
         }
 
         document.location.href = url;
@@ -55,7 +55,7 @@
     </div>
     <div>
     <p>
-      This is a new demo provides a cross-archive replay system across multiple archives using <a href="http://memento.timetravel.org">Memento Timetravel</a>
+      This is a new demo provides a cross-archive reconstruct system across multiple archives using <a href="http://memento.timetravel.org">Memento Timetravel</a>
     </p>
     <p>
       The software is built using the Memento API available at: <a href="http://timetravel.mementoweb.org/guide/api/">http://timetravel.mementoweb.org/guide/api/</a>
