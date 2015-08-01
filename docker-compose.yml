@@ -1,0 +1,24 @@
+# Redis
+redis:
+  restart: always
+  image: redis:latest
+
+
+# Reconstruct
+reconstruct:
+  restart: always
+  image: ikreymer/pywb
+
+  volumes:
+    - ./:/webarchive
+
+  links:
+    - redis
+
+  environment:
+    - REDIS_URL=redis://redis_1
+
+  ports:
+    - 8080:8080
+
+

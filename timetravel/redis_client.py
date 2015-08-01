@@ -17,6 +17,9 @@ class RedisClient(object):
 
         redis_url = os.environ.get('REDISCLOUD_URL')
         if not redis_url:
+            redis_url = os.environ.get('REDIS_URL')
+
+        if not redis_url:
             redis_url = config.get('redis_url')
 
         if redis_url:
