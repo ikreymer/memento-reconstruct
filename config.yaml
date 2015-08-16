@@ -14,8 +14,6 @@ collections:
         wb_handler_class: !!python/name:timetravel.mementohandler.MementoHandler
         rewrite_opts:
             punycode_only_links: true
-            #client:
-            #    skip_postmessage: true
 
         cookie_scope: removeall
         fallback: live
