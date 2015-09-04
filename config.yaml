@@ -27,7 +27,7 @@ collections:
         wb_handler_class: !!python/name:timetravel.mementohandler.APIHandler
 
 
-memento_archive_xml: 'http://labs.mementoweb.org/aggregator_config/archivelist_new.xml'
+memento_archive_xml: 'http://labs.mementoweb.org/aggregator_config/archivelist.xml'
 
 redir_to_exact: false
 
