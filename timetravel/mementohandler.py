@@ -97,9 +97,7 @@ class MementoHandler(WBHandler):
             if key_name:
                 page_key = redis_client.get_url_key(wb_url)
 
-                ts = wbrequest.wb_url.timestamp
-                if not ts:
-                    ts = timestamp_now()
+                ts = timestamp_now()
 
                 value = (key_name + ts + ' ' +
                           wbrequest.wb_url.url)
