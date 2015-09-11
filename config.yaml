@@ -17,6 +17,7 @@ collections:
 
         cookie_scope: removeall
         fallback: live
+        search_html: index.html
 
     'live':
         index_paths: $liveweb

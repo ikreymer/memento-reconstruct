@@ -19,14 +19,13 @@ class PyTest(TestCommand):
 
 setup(
     name='memento-reconstruct',
-    version='1.3.0',
-#    url='https://github.com/ikreymer/pywb-timetravel',
+    version='1.4.0',
     author='Ilya Kreymer',
     author_email='ikreymer@gmail.com',
     license='AGPL',
     packages=find_packages(),
-    description='Aggregate Wayback Machine!',
-    long_description='Aggregate Wayback Machine!',
+    description='Memento Reconstruct: Aggregate Web Archive Replay',
+    long_description='Memento Reconstruct: Aggregate Web Archive Replay',
     provides=[
         'timetravel',
         ],
@@ -34,7 +33,6 @@ setup(
         'pywb>=0.10.5',
         ],
     dependency_links=[
-#        "git+git://github.com/ikreymer/pywb.git@develop#egg=pywb-0.8.0"
     ],
     zip_safe=False,
     cmdclass={'test': PyTest},
