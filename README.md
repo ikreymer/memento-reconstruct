@@ -1,6 +1,8 @@
 Memento Reconstruct: A Cross-Archive Replay Service
 ===================================================
 
+![Screenshot](static/images/sample_timeline.png)
+
 Memento Reconstruct is a unified replay system based on the memento api to provide across multiple existing archives.
 
 The system is also deployed at http://timetravel.mementoweb.org/
