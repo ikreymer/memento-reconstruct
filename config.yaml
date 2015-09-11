@@ -9,9 +9,9 @@ collections:
             - http://timetravel.mementoweb.org/api/json/
             - http://labs.mementoweb.org/timemap/json/
 
-        server_cls: !!python/name:timetravel.mementoquery.MementoIndexServer
+        server_cls: !!python/name:webreconstruct.mementoquery.MementoIndexServer
 
-        wb_handler_class: !!python/name:timetravel.mementohandler.MementoHandler
+        wb_handler_class: !!python/name:webreconstruct.mementohandler.MementoHandler
         rewrite_opts:
             punycode_only_links: true
 
@@ -25,7 +25,7 @@ collections:
 
     'reconstruct-api':
         index_paths: $liveweb
-        wb_handler_class: !!python/name:timetravel.mementohandler.APIHandler
+        wb_handler_class: !!python/name:webreconstruct.mementohandler.APIHandler
 
 
 memento_archive_xml: 'http://labs.mementoweb.org/aggregator_config/archivelist.xml'
@@ -38,4 +38,4 @@ enable_cdx_api: true
 
 enable_memento: true
 
-urlrewriter_class: !!python/name:timetravel.mementohandler.ReUrlRewriter
+urlrewriter_class: !!python/name:webreconstruct.mementohandler.ReUrlRewriter

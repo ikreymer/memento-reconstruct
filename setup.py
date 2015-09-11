@@ -13,7 +13,7 @@ class PyTest(TestCommand):
         import pytest
         import sys
         import os
-        cmdline = ' --cov timetravel -v tests/'
+        cmdline = ' --cov webreconstruct -v tests/'
         errcode = pytest.main(cmdline)
         sys.exit(errcode)
 
@@ -27,7 +27,7 @@ setup(
     description='Memento Reconstruct: Aggregate Web Archive Replay',
     long_description='Memento Reconstruct: Aggregate Web Archive Replay',
     provides=[
-        'timetravel',
+        'webreconstruct',
         ],
     install_requires=[
         'pywb>=0.10.5',
